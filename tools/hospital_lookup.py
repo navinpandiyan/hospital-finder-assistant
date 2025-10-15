@@ -120,7 +120,7 @@ async def hospital_lookup_wrapper(
     of hospitals based on the intent (nearest, best or within radius).
     """
     LOGGER.info(
-        f"Looking up hospitals for lat={user_lat}, lon={user_lon}, intent={intent}" 
+        f"Looking up hospitals for lat={user_lat}, lon={user_lon}, intent={intent}, " 
         f"types={hospital_types}, insurance={insurance_providers}, n_hospitals={n_hospitals}, distance_km_radius={distance_km_radius}"
     )
 
