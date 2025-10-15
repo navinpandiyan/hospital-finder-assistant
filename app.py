@@ -1,7 +1,7 @@
 # app.py
 import asyncio
 from db.models import HospitalFinderState
-from agents.hospital_graph import hospital_finder_graph
+from graphs.hospital_graph import hospital_finder_graph
 from settings.config import LOGGER
 
 async def main():
@@ -13,7 +13,6 @@ async def main():
     final_state = await hospital_finder_graph.ainvoke(state)
     
     final_response = final_state.get("final_response", {})
-    breakpoint()
     # Access final response
     if final_response:
         LOGGER.info(f"Final Response Text: {final_response.get("dialogue", final_response.get("text", ""))}")
