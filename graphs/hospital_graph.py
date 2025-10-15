@@ -126,7 +126,7 @@ async def find_hospitals(state: HospitalFinderState):
         return state
 
     user_lat, user_lon = state.recognition["location_coordinates"]
-    n_hospitals = state.recognition.get("n", DEFAULT_N_HOSPITALS_TO_RETURN)
+    n_hospitals = state.recognition.get("n_hospitals", DEFAULT_N_HOSPITALS_TO_RETURN)
     if not n_hospitals or n_hospitals <= 0:
         n_hospitals = DEFAULT_N_HOSPITALS_TO_RETURN
     distance_km = state.recognition.get("distance_km", DEFAULT_DISTANCE_KM)
