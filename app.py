@@ -14,11 +14,11 @@ async def main():
     final_response = final_state.get("final_response", {})
     
     # Access final response
-    if final_response:
-        LOGGER.info(f"Final Response Text: {final_response.get("dialogue", final_response.get("text", ""))}")
-        LOGGER.info(f"Final Response Audio Path: {getattr(final_state, 'final_response_audio_path', None)}")
-    else:
-        LOGGER.warning("No final response generated.")
+    # if final_response:
+    #     LOGGER.info(f"Final Response Text: {final_response.get("dialogue", final_response.get("text", ""))}")
+    #     LOGGER.info(f"Final Response Audio Path: {final_state.get("final_response_audio_path", None)}")
+    # else:
+    #     LOGGER.warning("No final response generated.")
 
 if __name__ == "__main__":
     asyncio.run(main())
