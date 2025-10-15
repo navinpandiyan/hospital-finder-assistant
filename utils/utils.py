@@ -39,7 +39,7 @@ if coordinates:
 else:
     LOGGER.debug(f"Could not find coordinates for '{location_to_find}'.")
 
-async def record_audio(output_filename="input_audio.wav", duration=5, rate=44100, chunk=1024, channels=1):
+async def record_audio(output_filename="input_audio.wav", duration=7, rate=44100, chunk=1024, channels=1):
     """
     Records audio from the microphone and saves it to a WAV file.
 
@@ -58,7 +58,7 @@ async def record_audio(output_filename="input_audio.wav", duration=5, rate=44100
                     input=True,
                     frames_per_buffer=chunk)
 
-    LOGGER.info("🎙️ Please speak your query now. Recording for 5 seconds...")
+    LOGGER.info("🎙️ Please speak your query now. Recording for 7 seconds...")
 
     frames = []
     for _ in range(0, int(rate / chunk * duration)):
