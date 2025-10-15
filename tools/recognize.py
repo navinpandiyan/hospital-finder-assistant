@@ -151,6 +151,8 @@ class QueryRecognizer:
         llm_output.location = llm_output.location.lower() if llm_output.location else None
         llm_output.hospital_type = [h.lower() for h in llm_output.hospital_type]
         llm_output.insurance = [i.lower() for i in llm_output.insurance]
+        llm_output.n_hospitals = llm_output.n_hospitals or DEFAULT_N_HOSPITALS_TO_RETURN
+        llm_output.distance_km = llm_output.distance_km or DEFAULT_DISTANCE_KM
 
         # Return the Pydantic model (or dict if needed)
         return llm_output
@@ -164,7 +166,7 @@ class QueryRecognizer:
         use_llm: If True, use LLM; otherwise, use spaCy + fuzzy matching.
         """
         if not query_text:
-            raise ValueError("Empty query text provided.")
+            query_text = "No Response Recieved. Exiting."
 
         if use_llm:
             llm_result = (await self._extract_with_llm(query_text)).model_dump()
