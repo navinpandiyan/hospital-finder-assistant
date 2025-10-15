@@ -4,22 +4,26 @@ This document provides a detailed overview of the key Python modules, classes, a
 
 ## Table of Contents
 - [Project Structure](#project-structure)
-- [Application Entry Point](#app.py)
-- [Database Models](#dbmodels.py)
-- [Graph Orchestration](#graphs)
-    - [hospital_graph.py](#graphs-hospital_graph.py)
-    - [graph_tools.py](#graphs-graph_tools.py)
-- [Settings and Configuration](#settings)
-    - [config.py](#settings-config.py)
-    - [prompts.py](#settings-prompts.py)
+- [Application Entry Point](#application-entry-point)
+    - [`app.py` Module](#app.py-module)
+- [Database Management](#database-management)
+    - [`db/models.py` Module](#dbmodels.py-module)
+    - [`db/db.py` Module](#dbdb.py-module)
+    - [`db/hospital_generator.py` Module](#dbhospital_generator.py-module)
+- [Graph Orchestration](#graph-orchestration)
+    - [`graphs/hospital_graph.py` Module](#graphshospital_graph.py-module)
+    - [`graphs/graph_tools.py` Module](#graphsgraph_tools.py-module)
+- [Settings and Configuration](#settings-and-configuration)
+    - [`settings/config.py` Module](#settingsconfig.py-module)
+    - [`settings/prompts.py` Module](#settingsprompts.py-module)
 - [Tools](#tools)
-    - [hospital_lookup.py](#tools-hospital_lookup.py)
-    - [recognize.py](#tools-recognize.py)
-    - [record.py](#tools-record.py)
-    - [text_to_speech.py](#tools-text_to_speech.py)
-    - [transcribe.py](#tools-transcribe.py)
-- [Utilities](#utils)
-    - [utils.py](#utils-utils.py)
+    - [`tools/hospital_lookup.py` Module](#toolshospital_lookup.py-module)
+    - [`tools/recognize.py` Module](#toolsrecognize.py-module)
+    - [`tools/record.py` Module](#toolsrecord.py-module)
+    - [`tools/text_to_speech.py` Module](#toolstext_to_speech.py-module)
+    - [`tools/transcribe.py` Module](#toolstranscribe.py-module)
+- [Utilities](#utilities)
+    - [`utils/utils.py` Module](#utilsutils.py-module)
 
 ---
 
@@ -63,7 +67,7 @@ The project is organized into several directories, each serving a specific purpo
     *   `utils.py`: General utility functions (e.g., audio playback, geocoding, state saving).
 
 ## Application Entry Point
-### `app.py`
+### `app.py` Module
 
 This module serves as the primary entry point for the Voice Hospital Finder Bot application. It initializes the conversational state and orchestrates the execution of the `hospital_finder_graph` to manage the dialog flow.
 
@@ -77,8 +81,8 @@ This module serves as the primary entry point for the Voice Hospital Finder Bot 
         3.  Calls `hospital_finder_graph.ainvoke(state)` to run the conversational graph.
     *   **Usage**: Designed to be run as an asynchronous application.
 
-## Database Models
-### `db/models.py`
+## Database Management
+### `db/models.py` Module
 
 This module defines the Pydantic models used for managing the state of the hospital finder session and structuring LLM outputs and TTS responses.
 
@@ -117,7 +121,7 @@ This module defines the Pydantic models used for managing the state of the hospi
         *   `tone` (Optional[str]): The emotional tone for the TTS output (e.g., 'friendly', 'informative').
 
 ## Graph Orchestration
-### `graphs/hospital_graph.py`
+### `graphs/hospital_graph.py` Module
 
 This module defines and orchestrates the conversational flow of the Voice Hospital Finder Bot using LangGraph. It sets up a state machine with various nodes representing different stages of user interaction and system processing.
 
@@ -192,7 +196,7 @@ The `hospital_finder_graph` is a `StateGraph` that manages the `HospitalFinderSt
 
 *   The graph starts at the `record_transcribe_recognize` node, initiating the interaction by recording user input.
 
-### `graphs/graph_tools.py`
+### `graphs/graph_tools.py` Module
 
 This module defines specialized asynchronous tools, leveraging LangChain's `@tool` decorator, which are integrated into the `hospital_finder_graph`. These tools encapsulate specific functionalities such as audio transcription, natural language understanding, text-to-speech conversion, and hospital database lookup.
 
@@ -238,7 +242,7 @@ This module defines specialized asynchronous tools, leveraging LangChain's `@too
     *   **Internal Logic**: Internally calls `tools.hospital_lookup.hospital_lookup_wrapper`.
 
 ## Settings and Configuration
-### `settings/config.py`
+### `settings/config.py` Module
 
 This module centralizes all configuration parameters and constants used throughout the Voice Hospital Finder Bot project. It handles environment variable loading, sets up logging, and defines various constants for different modules and functionalities.
 
@@ -291,7 +295,7 @@ This module centralizes all configuration parameters and constants used througho
     *   `N_HOSPITALS_TO_RETURN` (int): The default number of top hospitals to return in search results.
     *   `RATING_WEIGHT` (float): A weighting factor applied to hospital ratings when ranking search results.
 
-### `settings/prompts.py`
+### `settings/prompts.py` Module
 
 This module stores various system and user prompts used to guide Large Language Models (LLMs) for specific tasks such as natural language understanding (NLU) and text-to-dialogue conversion. These prompts are crucial for instructing LLMs on expected output formats, constraints, and contextual information.
 
@@ -322,7 +326,7 @@ This module stores various system and user prompts used to guide Large Language 
     *   **Placeholder**: Includes `{text}` for the input text to be processed.
 
 ## Tools
-### `tools/hospital_lookup.py`
+### `tools/hospital_lookup.py` Module
 
 This module provides functionality for looking up hospitals based on geographical location, hospital types, and insurance providers. It includes distance calculation and a scoring mechanism to rank relevant hospitals.
 
@@ -360,7 +364,7 @@ This module provides functionality for looking up hospitals based on geographica
     *   **Parameters**: (Same as `find_hospitals_async`).
     *   **Returns**: A list of dictionaries, each representing a matching hospital.
 
-### `tools/recognize.py`
+### `tools/recognize.py` Module
 
 This module provides the core functionality for Natural Language Understanding (NLU) by extracting key entities like `location`, `hospital_type`, and `insurance` from user queries. It supports both spaCy-based fuzzy matching and LLM-based extraction.
 
@@ -415,7 +419,7 @@ This module provides the core functionality for Natural Language Understanding (
         *   `use_llm` (bool, default `False`): Flag to determine whether to use LLM for extraction.
     *   **Returns**: A dictionary with extracted entities and metadata, similar to the `recognize` method.
 
-### `tools/record.py`
+### `tools/record.py` Module
 
 This module provides functionality for recording audio input from the user. It leverages `asyncio` for non-blocking I/O operations, ensuring the recording process integrates smoothly within an asynchronous application flow.
 
@@ -435,7 +439,7 @@ This module provides functionality for recording audio input from the user. It l
     *   **Returns**: A dictionary containing the `uid` and the `input_audio_path` to the saved audio file.
     *   **Raises**: Catches and logs any exceptions that occur during recording, then re-raises them.
 
-### `tools/text_to_speech.py`
+### `tools/text_to_speech.py` Module
 
 This module manages the conversion of text into spoken audio using OpenAI's Text-to-Speech (TTS) API. It also includes an optional feature for refining input text into a more conversational dialogue format using an LLM before TTS conversion.
 
@@ -462,13 +466,13 @@ This module manages the conversion of text into spoken audio using OpenAI's Text
     *   **Parameters**:
         *   `text` (str): The input text to be converted into dialogue.
     *   **Process**:
-        1.  Formats the `TEXT_TO_DIALOGUE_USER_PROMPT` with the input `text`.
+        1.  Formates the `TEXT_TO_DIALOGUE_USER_PROMPT` with the input `text`.
         2.  Sends the system and user prompts to an LLM via `async_llm_client.beta.chat.completions.parse`.
         3.  The LLM's response is parsed into a `TTSResponseModel`.
         4.  If the LLM does not return a dialogue, the original text is used as a fallback.
     *   **Returns**: A `TTSResponseModel` object containing the `dialogue` and `tone`.
 
-### `tools/transcribe.py`
+### `tools/transcribe.py` Module
 
 This module provides functionality for transcribing audio files into text using the OpenAI Whisper API. It is designed to work asynchronously and handle both WAV and MP3 audio formats, making it suitable for converting spoken queries into a textual format for further processing by NLU or LLM components.
 
@@ -490,7 +494,7 @@ This module provides functionality for transcribing audio files into text using 
     *   **Raises**: `FileNotFoundError` if the audio file doesn't exist, and catches/logs other `Exception`s during the transcription process, then re-raises them.
 
 ## Utilities
-### `utils/utils.py`
+### `utils/utils.py` Module
 
 This module contains various utility functions that support the core functionalities of the Voice Hospital Finder Bot, including geolocation services, audio recording and playback, and state management.
 
@@ -503,7 +507,7 @@ This module contains various utility functions that support the core functionali
     *   **Process**: Uses the `geopy.geocoders.Nominatim` service to look up the coordinates.
     *   **Returns**: A tuple `(latitude, longitude)` if the location is found; otherwise, `None`. Logs debug information or errors.
 
-*   **`async def record_audio(output_filename="input_audio.wav", duration=5, rate=44100, chunk=1024, channels=1) -> str`**:
+*   **`async def record_audio(output_filename="input_audio.wav", duration=5, rate=44100, chunk=1024, channels=1)`**:
     *   **Purpose**: Records audio from the system's microphone and saves it as a WAV file.
     *   **Parameters**:
         *   `output_filename` (str): The desired path and filename for the recorded WAV file. Defaults to "input_audio.wav".
@@ -551,8 +555,8 @@ This module contains various utility functions that support the core functionali
         4.  Asynchronously writes the dictionary to a JSON file using `asyncio.to_thread`.
     *   **Returns**: The file path to the saved JSON state file.
 
-## Database Setup
-### `db/db.py`
+## Database Management
+### `db/db.py` Module
 
 This module is responsible for setting up the SQLite database using Pony ORM and initializing it with synthetic hospital data if the database is empty.
 
@@ -586,8 +590,7 @@ This module is responsible for setting up the SQLite database using Pony ORM and
     3.  Iterates through the generated records and creates `Hospital` entities, populating the database.
     4.  Logs the number of hospitals generated.
 
-## Database Data Generation
-### `db/hospital_generator.py`
+### `db/hospital_generator.py` Module
 
 This module is responsible for generating synthetic hospital training data, which includes realistic hospital names, locations, types, insurance providers, ratings, and addresses. This data is used to populate the application's database for demonstration and testing purposes.
 
