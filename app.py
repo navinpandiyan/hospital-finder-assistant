@@ -11,8 +11,8 @@ async def main():
 
     # Run the compiled StateGraph
     final_state = await hospital_finder_graph.ainvoke(state)
-    
     final_response = final_state.get("final_response", {})
+    
     # Access final response
     if final_response:
         LOGGER.info(f"Final Response Text: {final_response.get("dialogue", final_response.get("text", ""))}")
