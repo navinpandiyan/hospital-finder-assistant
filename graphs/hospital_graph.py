@@ -7,39 +7,50 @@ from utils.utils import play_audio, record_audio, save_state, summarize_conversa
 
 graph = StateGraph(HospitalFinderState)
 
+EXIT_KEYWORDS = [
+    "no", "nope", "stop", "exit", "quit", "end", 
+    "that's all", "done", "nothing", "bye", "goodbye"
+]
+
 # ----------------------------
 # Node 1: Record → Transcribe → Recognize
 # ----------------------------
 async def record_transcribe_recognize(state: HospitalFinderState):
     is_clarify_turn = state.turn_count > 0
+
+    # --- Keep same UID for entire session ---
+    if state.uid is None:
+        state.uid = str(uuid.uuid4())
+
     audio_filename = f"clarify_{state.uid}.wav" if is_clarify_turn else f"{state.uid}.wav"
     audio_path = await record_audio(output_filename=f"audios/input/{audio_filename}", duration=5)
-
-    # Store in clarify vs original fields
-    if is_clarify_turn:
-        state.clarify_user_response_audio_path = audio_path
-    else:
-        state.input_audio_path = audio_path
 
     # --- Transcribe ---
     transcription_result = await transcribe_audio_tool.ainvoke({
         "audio_path": audio_path,
         "uid": state.uid
     })
+    transcription_text = transcription_result.get("transcribed_text", "").lower()
+
+    # --- Check for exit words ---
+    if any(word in transcription_text for word in EXIT_KEYWORDS):
+        state.user_wants_exit = True  # Flag to let conditional edge handle END
+        return state
 
     # --- Recognize query ---
     recognition_result = await recognize_query_tool.ainvoke({
-        "query_text": transcription_result.get("transcribed_text"),
+        "query_text": transcription_text,
         "uid": state.uid,
         "use_llm": False
     })
 
-    # Merge or assign clarify fields
+    # Assign or merge fields
     if is_clarify_turn:
+        state.clarify_user_response_audio_path = audio_path
         state.clarify_transcription = transcription_result
         state.clarify_recognition = recognition_result
 
-        # Merge new data into main recognition (location, hospital type, insurance)
+        # Merge missing fields
         if not state.recognition.get("location") and recognition_result.get("location"):
             state.recognition["location"] = recognition_result["location"]
             state.recognition["location_coordinates"] = recognition_result.get("location_coordinates")
@@ -51,8 +62,14 @@ async def record_transcribe_recognize(state: HospitalFinderState):
             set(state.recognition.get("insurance", []) + recognition_result.get("insurance", []))
         )
     else:
+        # First turn: populate state without replacing UID
+        state.input_audio_path = audio_path
         state.transcription = transcription_result
         state.recognition = recognition_result
+        state.clarify_recognition = {}
+        state.clarify_transcription = {}
+        state.clarify_bot_response_audio_path = None
+        state.clarify_user_response_audio_path = None
 
     state.turn_count += 1
     return state
@@ -67,9 +84,15 @@ async def clarifier(state: HospitalFinderState):
     if location:
         return state  # location already found
 
+    transcription_text = (state.clarify_transcription or {}).get("transcribed_text", "").lower()
+    if any(word in transcription_text for word in EXIT_KEYWORDS):
+        state.user_wants_exit = True
+        return state
+
     if state.turn_count >= MAX_TURNS:
         LOGGER.warning("Max turns reached without location.")
         state.final_response = {"error": "Location not provided after multiple attempts."}
+        state.user_wants_exit = True
         return state
 
     def build_clarifier_prompt(state: HospitalFinderState) -> str:
@@ -87,7 +110,6 @@ async def clarifier(state: HospitalFinderState):
         return " ".join(parts)
     
     question_text = build_clarifier_prompt(state)
-    # LOGGER.info(f"Clarify for Missing Location: {question_text}")
     tts_result = await text_to_speech_tool.ainvoke({
         "text": question_text,
         "uid": state.uid
@@ -152,77 +174,18 @@ async def generate_response(state: HospitalFinderState):
     await summarize_conversation(state)
     await save_state(state)
     
-    final_state = state.copy()
-    
-    # Reset turn count for next query
+    # Clear state for new query except UID
     state.turn_count = 0
-
-    return final_state
+    return state
 
 graph.add_node("generate_response", generate_response)
 
 # ----------------------------
-# Node 5: Record next query in a new state
-# ----------------------------
-async def record_transcribe_recognize_next_query(state: HospitalFinderState):
-    """
-    Creates a new HospitalFinderState for the next query,
-    records user audio, transcribes and recognizes it.
-    """
-    new_uid = str(uuid.uuid4())
-    state = HospitalFinderState(uid=new_uid)
-    is_clarify_turn = state.turn_count > 0
-    audio_filename = f"clarify_{state.uid}.wav" if is_clarify_turn else f"{state.uid}.wav"
-    audio_path = await record_audio(output_filename=f"audios/input/{audio_filename}", duration=5)
-
-    # Store in clarify vs original fields
-    if is_clarify_turn:
-        state.clarify_user_response_audio_path = audio_path
-    else:
-        state.input_audio_path = audio_path
-
-    # --- Transcribe ---
-    transcription_result = await transcribe_audio_tool.ainvoke({
-        "audio_path": audio_path,
-        "uid": state.uid
-    })
-
-    # --- Recognize query ---
-    recognition_result = await recognize_query_tool.ainvoke({
-        "query_text": transcription_result.get("transcribed_text"),
-        "uid": state.uid,
-        "use_llm": False
-    })
-
-    # Merge or assign clarify fields
-    if is_clarify_turn:
-        state.clarify_transcription = transcription_result
-        state.clarify_recognition = recognition_result
-
-        # Merge new data into main recognition (location, hospital type, insurance)
-        if not state.recognition.get("location") and recognition_result.get("location"):
-            state.recognition["location"] = recognition_result["location"]
-            state.recognition["location_coordinates"] = recognition_result.get("location_coordinates")
-
-        state.recognition["hospital_type"] = list(
-            set(state.recognition.get("hospital_type", []) + recognition_result.get("hospital_type", []))
-        )
-        state.recognition["insurance"] = list(
-            set(state.recognition.get("insurance", []) + recognition_result.get("insurance", []))
-        )
-    else:
-        state.transcription = transcription_result
-        state.recognition = recognition_result
-
-    state.turn_count += 1
-    return state
-
-graph.add_node("re_record_transcribe_recognize", record_transcribe_recognize_next_query)
-
-# ----------------------------
 # Conditional edges
 # ----------------------------
-def location_check(state: HospitalFinderState):
+def clarifier_conditional(state: HospitalFinderState):
+    if getattr(state, "user_wants_exit", False):
+        return "end_conversation"
     if state.recognition and state.recognition.get("location"):
         return "location_found"
     if state.turn_count >= MAX_TURNS:
@@ -231,32 +194,33 @@ def location_check(state: HospitalFinderState):
 
 graph.add_conditional_edges(
     "clarifier",
-    location_check,
+    clarifier_conditional,
     {
-        "location_missing": "record_transcribe_recognize",  # loop until location
+        "location_missing": "record_transcribe_recognize",
         "location_found": "find_hospitals",
-        "max_turns_reached": "generate_response"
-    }
-)
-
-graph.add_edge("record_transcribe_recognize", "clarifier")
-graph.add_edge("find_hospitals", "generate_response")
-graph.add_edge("generate_response", "re_record_transcribe_recognize")
-
-def re_query_check(state: HospitalFinderState):
-    transcription = state.transcription.get("transcribed_text", "").lower()
-    if any(keyword in transcription for keyword in ["no", "nope", "stop", "exit", "quit", "end", "that's all", "done", "nothing", "bye", "goodbye"]):
-        return "end_conversation"
-    return "loop_to_clarify"
-
-graph.add_conditional_edges(
-    "re_record_transcribe_recognize",
-    re_query_check,
-    {
-        "loop_to_clarify": "clarifier",
+        "max_turns_reached": "generate_response",
         "end_conversation": END
     }
 )
+
+# Conditional edge from first node to clarifier or END
+def record_conditional(state: HospitalFinderState):
+    if getattr(state, "user_wants_exit", False):
+        return "end_conversation"
+    return "clarifier"
+
+graph.add_conditional_edges(
+    "record_transcribe_recognize",
+    record_conditional,
+    {
+        "clarifier": "clarifier",
+        "end_conversation": END
+    }
+)
+
+# Normal edges
+graph.add_edge("find_hospitals", "generate_response")
+graph.add_edge("generate_response", "record_transcribe_recognize")
 
 # ----------------------------
 # Entry point
