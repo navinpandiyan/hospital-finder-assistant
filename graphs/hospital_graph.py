@@ -175,7 +175,7 @@ async def generate_response(state: HospitalFinderState):
     await save_state(state)
     
     # Clear state for new query except UID
-    state.turn_count = 0
+    state = HospitalFinderState()
     return state
 
 graph.add_node("generate_response", generate_response)
