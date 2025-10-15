@@ -180,7 +180,7 @@ class QueryRecognizer:
                 "location_coordinates": await asyncio.to_thread(get_lat_long, llm_result.get("location")) if llm_result.get("location") else (None, None),
                 "hospital_type": llm_result.get("hospital_type", []),
                 "insurance": llm_result.get("insurance", []),
-                "n_hospitals": llm_result.get("n", DEFAULT_N_HOSPITALS_TO_RETURN),
+                "n_hospitals": llm_result.get("n_hospitals", DEFAULT_N_HOSPITALS_TO_RETURN),
                 "distance_km": llm_result.get("distance_km", DEFAULT_DISTANCE_KM),
             }
             
