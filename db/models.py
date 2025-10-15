@@ -1,3 +1,4 @@
+import uuid
 from pydantic import BaseModel, Field
 from typing import List, Optional
 
@@ -11,7 +12,7 @@ class LLMResponseModel(BaseModel):
     insurance: List[str] = Field(default_factory=list)
     
 class HospitalFinderState(BaseModel):
-    uid: str
+    uid: Optional[str] = str(uuid.uuid4())
     input_audio_path: Optional[str] = None
     transcription: Optional[dict] = None
     recognition: Optional[dict] = None

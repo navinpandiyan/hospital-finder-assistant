@@ -1,12 +1,12 @@
 # app.py
 import asyncio
+import uuid  # Import uuid for generating unique IDs
 from db.models import HospitalFinderState
 from graphs.hospital_graph import hospital_finder_graph
 from settings.config import LOGGER
 
 async def main():
-    # Create a new state for the user session
-    state = HospitalFinderState(uid="user_123")  # You can generate unique UID per user/session
+    state = HospitalFinderState()  # You can generate unique UID per user/session
     LOGGER.info("Starting Hospital Finder session...")
 
     # Run the compiled StateGraph
