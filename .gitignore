@@ -13,7 +13,6 @@ uv.lock
 .env
 outputs/
 audios/
-data/hospitals.sqlite
 ai_voice_bot_hospital.egg-info/
 test_recognizer_output.json
 
