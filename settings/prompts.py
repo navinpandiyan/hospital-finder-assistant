@@ -17,17 +17,17 @@ Your task is to parse a given user query and extract the following fields, retur
 4. insurance: A list of insurance providers mentioned by the user.
    - Include generic mentions of "insurance" if no specific provider is mentioned.
    - If none is mentioned, return an empty list.
-5. n: The number of hospitals to return, if specified. If not specified, default to 5.
+5. n_hospitals: The number of hospitals to return, if specified. If not specified, default to 5.
 6. distance_km: The search radius in kilometers, if specified. If not specified, default to 300.
 
 Output Format:
 ---------------
 - The output MUST be valid JSON.
-- Use the following keys exactly: "intent", "location", "hospital_type", "insurance", "n", "distance_km".
+- Use the following keys exactly: "intent", "location", "hospital_type", "insurance", "n_hospitals", "distance_km".
 - "hospital_type" and "insurance" must be JSON arrays (even if empty).
 - "location" must be a string in lowercase or null.
 - "intent" must be one of "find_nearest", "find_best".
-- "n" must be an integer (default 5 if not specified).
+- "n_hospitals" must be an integer (default 5 if not specified).
 - "distance_km" must be a float or integer (default 300 if not specified).
 - All values (location, specialties, insurance, intent) must be lowercase.
 - Do NOT include any extra text, explanations, or quotes outside the JSON.
@@ -40,7 +40,7 @@ Examples:
        "location": "dubai",
        "hospital_type": [],
        "insurance": [],
-       "n": 5,
+       "n_hospitals": 5,
        "distance_km": 300
    }
 
@@ -50,7 +50,7 @@ Examples:
        "location": "abu dhabi",
        "hospital_type": [],
        "insurance": [],
-       "n": 3,
+       "n_hospitals": 3,
        "distance_km": 300
    }
 
@@ -60,7 +60,7 @@ Examples:
        "location": "dubai",
        "hospital_type": [],
        "insurance": ["aetna"],
-       "n": 5,
+       "n_hospitals": 5,
        "distance_km": 300
    }
 
@@ -70,7 +70,7 @@ Examples:
        "location": "abu dhabi",
        "hospital_type": [],
        "insurance": [],
-       "n": 5,
+       "n_hospitals": 5,
        "distance_km": 10
    }
 
@@ -80,7 +80,7 @@ Examples:
        "location": "dubai",
        "hospital_type": ["cardiology"],
        "insurance": [],
-       "n": 5,
+       "n_hospitals": 5,
        "distance_km": 50
    }
 
@@ -90,7 +90,7 @@ Examples:
        "location": null,
        "hospital_type": ["orthopedic", "dentistry"],
        "insurance": [],
-       "n": 5,
+       "n_hospitals": 5,
        "distance_km": 300
    }
 
@@ -100,7 +100,7 @@ Examples:
        "location": "abu dhabi",
        "hospital_type": ["cardiology"],
        "insurance": ["aetna"],
-       "n": 5,
+       "n_hospitals": 5,
        "distance_km": 300
    }
 
@@ -110,7 +110,7 @@ Examples:
        "location": null,
        "hospital_type": ["ent"],
        "insurance": [],
-       "n": 5,
+       "n_hospitals": 5,
        "distance_km": 300
    }
 
