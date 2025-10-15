@@ -1,4 +1,6 @@
+import json
 import pyaudio
+import asyncio
 import wave
 import os
 from settings.config import LOGGER
@@ -156,3 +158,23 @@ async def summarize_conversation(final_state: HospitalFinderState):
     # print(f"Text: {final_response.get('text', 'N/A')}")
     print(f"Response: {final_response.get('dialogue', 'N/A')}")
     print(f"Audio Path: {final_response.get('audio_path', final_state.final_response_audio_path)}\n")
+
+async def save_state(state: HospitalFinderState, output_dir="outputs"):
+    """
+    Save the current HospitalFinderState as a JSON file in outputs/<uid>.json
+    """
+    # Ensure the directory exists
+    os.makedirs(output_dir, exist_ok=True)
+    
+    # Dump state to dictionary
+    state_dict = state.model_dump()
+    
+    # File path
+    file_path = os.path.join(output_dir, f"{state.uid}.json")
+    
+    # Write JSON asynchronously using a thread
+    await asyncio.to_thread(
+        lambda: json.dump(state_dict, open(file_path, "w", encoding="utf-8"), indent=4)
+    )
+    
+    return file_path

@@ -2,7 +2,7 @@ from langgraph.graph import StateGraph, END
 from db.models import HospitalFinderState
 from graphs.graph_tools import transcribe_audio_tool, recognize_query_tool, text_to_speech_tool, hospital_lookup_tool
 from settings.config import LOGGER, MAX_TURNS
-from utils.utils import play_audio, record_audio, summarize_conversation
+from utils.utils import play_audio, record_audio, save_state, summarize_conversation
 
 graph = StateGraph(HospitalFinderState)
 
@@ -139,6 +139,7 @@ async def generate_response(state: HospitalFinderState):
     state.final_response_audio_path = tts_result["audio_path"]
     
     await summarize_conversation(state)
+    await save_state(state)
     return state
 
 graph.add_node("generate_response", generate_response)
