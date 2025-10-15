@@ -102,4 +102,4 @@ Key configurable parameters are located in `settings/config.py`. These include s
 For a complete list and explanation, refer to the [Detailed Documentation](#detailed-documentation).
 
 ## Detailed Documentation
-For a comprehensive guide, including in-depth architectural details, extensibility options, and advanced troubleshooting, please see [DOCUMENTATION.md](DOCUMENTATION.md).
+For a comprehensive guide, including in-depth architectural details, extensibility options, and advanced troubleshooting, please see [DOCUMENTATION.md](/docs/DOCUMENTATION.md).
