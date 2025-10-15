@@ -58,7 +58,7 @@ async def record_audio(output_filename="input_audio.wav", duration=5, rate=44100
                     input=True,
                     frames_per_buffer=chunk)
 
-    LOGGER.info("Please speak your query now (e.g., 'Find me a cardiology hospital in Dubai'). Recording for 5 seconds...")
+    LOGGER.info("🎙️ Please speak your query now. Recording for 5 seconds...")
 
     frames = []
     for _ in range(0, int(rate / chunk * duration)):

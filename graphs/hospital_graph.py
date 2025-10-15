@@ -107,9 +107,11 @@ async def clarifier(state: HospitalFinderState):
     question_text = build_clarifier_prompt(state)
     tts_result = await text_to_speech_tool.ainvoke({
         "text": question_text,
-        "uid": state.uid
+        "uid": state.uid,
+        "convert_to_dialogue": TEXT_TO_DIALOGUE
     })
     state.clarify_bot_response_audio_path = tts_result["audio_path"]
+    LOGGER.info(f"BOT: '{tts_result["dialogue"]}'")
     await play_audio(tts_result["audio_path"])
     return state
 
@@ -154,21 +156,24 @@ async def generate_response(state: HospitalFinderState):
         "uid": state.uid,
         "convert_to_dialogue": TEXT_TO_DIALOGUE
     })
+    LOGGER.info(f"BOT: '{tts_result["dialogue"]}'")
     await play_audio(tts_result["audio_path"])
     state.final_response = tts_result
     state.final_response_audio_path = tts_result["audio_path"]
+    
+    # Summarize conversation and save state
+    await summarize_conversation(state)
+    await save_state(state)
 
     # --- Ask if user wants another query ---
     followup_text = "Do you want help with any other query?"
     followup_tts = await text_to_speech_tool.ainvoke({
         "text": followup_text,
-        "uid": state.uid
+        "uid": state.uid,
+        "convert_to_dialogue": TEXT_TO_DIALOGUE
     })
-    await play_audio(followup_tts["audio_path"])
-
-    # Summarize conversation and save state
-    await summarize_conversation(state)
-    await save_state(state)
+    LOGGER.info(f"BOT: '{followup_tts["dialogue"]}'")
+    await play_audio(followup_tts["audio_path"])    
     
     # Clear state for new query except UID
     state = HospitalFinderState()

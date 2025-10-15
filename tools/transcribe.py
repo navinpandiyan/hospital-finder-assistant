@@ -34,7 +34,7 @@ async def transcribe_wrapper(audio_path: str, uid: str) -> dict:
     if not os.path.exists(audio_path):
         raise FileNotFoundError(f"Audio file not found: {audio_path}")
 
-    LOGGER.info(f"🎙️ Transcribing audio for UID={uid}: {audio_path}")
+    # LOGGER.info(f"🎙️ Transcribing audio for UID={uid}: {audio_path}")
 
     try:
         # Open file safely and stream to OpenAI’s transcription model
@@ -48,7 +48,7 @@ async def transcribe_wrapper(audio_path: str, uid: str) -> dict:
 
         transcribed_text = response.text.strip() if hasattr(response, "text") else ""
 
-        LOGGER.info(f"📝 Transcription complete: '{transcribed_text}'")
+        LOGGER.info(f"📝 USER: '{transcribed_text}'")
 
         return {
             "uid": uid,

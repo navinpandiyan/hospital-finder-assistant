@@ -23,7 +23,7 @@ async def text_to_speech_wrapper(text: str, uid: str, output_dir: str = "audios/
         audio_filename = f"{uid}_{str(uuid.uuid4())}.mp3"
         audio_path = os.path.join(output_dir, audio_filename)
 
-        LOGGER.info(f"Generating speech for text: '{text[:50]}...'")
+        # LOGGER.info(f"Generating speech for text: '{text[:50]}...'")
         # Convert text to dialogue format if needed
         if convert_to_dialogue:
             tts_response = await text_to_dialogue(text)
@@ -46,7 +46,7 @@ async def text_to_speech_wrapper(text: str, uid: str, output_dir: str = "audios/
         # Save the audio to a file
         await asyncio.to_thread(response.stream_to_file, audio_path)
         
-        LOGGER.info(f"Speech generated and saved to {audio_path}")
+        # LOGGER.info(f"Speech generated and saved to {audio_path}")
         
         return {
             "uid": uid,

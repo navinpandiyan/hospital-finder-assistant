@@ -14,7 +14,11 @@ except OSError:
     print("Error: spaCy model 'en_core_web_sm' not found.")
     print("Please run: python -m spacy download en_core_web_sm")
     NLP_MODEL = None
-    
+
+# Silence httpx and httpcore info/debug logs
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
+
 # Logging Configuration & Initialization
 logging.basicConfig(level=logging.INFO)
 LOGGER = logging.getLogger("uvicorn.logger")
@@ -107,7 +111,6 @@ INSURANCE_PROVIDERS = [
 # Transcriber Config
 TRANSCRIBER_OPENAI_MODEL = "whisper-1"
 TRANSCRIBER_LANGUAGE = "en"
-
 
 # Recognizer Config
 FUZZY_MATCH_THRESHOLD = 95 # Fuzzy match threshold for SpaCy
