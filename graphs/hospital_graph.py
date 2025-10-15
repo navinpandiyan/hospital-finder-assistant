@@ -72,8 +72,22 @@ async def clarifier(state: HospitalFinderState):
         state.final_response = {"error": "Location not provided after multiple attempts."}
         return state
 
-    question_text = "I didn't catch your location. Could you please tell me where you are located?"
-    LOGGER.info(f"Clarify for Missing Location: {question_text}")
+    def build_clarifier_prompt(state: HospitalFinderState) -> str:
+        hospital_types = state.recognition.get("hospital_type", [])
+        insurance_providers = state.recognition.get("insurance", [])
+
+        parts = ["I didn't catch your location."]
+        if hospital_types:
+            parts.append(f"You mentioned looking for {' and '.join(hospital_types)} hospitals.")
+        if insurance_providers:
+            parts.append(f"You also mentioned insurance providers: {' and '.join(insurance_providers)}.")
+
+        parts.append("Could you please tell me the city or area you're in? You can also update hospital types or insurance if needed.")
+        
+        return " ".join(parts)
+    
+    question_text = build_clarifier_prompt(state)
+    # LOGGER.info(f"Clarify for Missing Location: {question_text}")
     tts_result = await text_to_speech_tool.ainvoke({
         "text": question_text,
         "uid": state.uid
