@@ -4,7 +4,7 @@ from pony.orm import db_session, select
 from db.db import Hospital
 import math
 import pandas as pd
-
+pd.options.mode.chained_assignment = None  # default='warn'
 from settings.config import LOGGER
 
 # -----------------------------
@@ -25,10 +25,11 @@ def haversine_distance(lat1, lon1, lat2, lon2):
 async def find_hospitals_async(
     user_lat: float,
     user_lon: float,
+    intent: str, # find_nearest, find_best
     hospital_types: Optional[List[str]] = None,
     insurance_providers: Optional[List[str]] = None,
-    limit: int = 5,
-    rating_weight: float = 0.7
+    n_hospitals: int = 5, # default is 5 hospitals
+    distance_km_radius: float = 300, # default is 300 kms
 ) -> List[dict]:
 
     loop = asyncio.get_running_loop()
@@ -86,11 +87,20 @@ async def find_hospitals_async(
     # Compute distance, normalize, score, sort
     # -----------------------------
     df["distance_km"] = df.apply(lambda row: haversine_distance(user_lat, user_lon, row.latitude, row.longitude), axis=1)
-    df["norm_rating"] = normalize(df["rating"])
+    df["norm_rating"] = normalize(df["rating"])        
+    df = df[df["distance_km"] <= distance_km_radius]
     df["norm_distance"] = normalize(df["distance_km"])
-    df["score"] = rating_weight * df["norm_rating"] + (1 - rating_weight) * (1 - df["norm_distance"])
+    
+    if intent == "find_best":
+        df["score"] = df["norm_rating"]
+        df = df.sort_values("score", ascending=False)
+    elif intent == "find_nearest":
+        df["score"] = (1 - df["norm_distance"])
+        df = df.sort_values("score", ascending=False)
 
-    return df.sort_values("score", ascending=False).head(limit).to_dict("records")
+        return df.to_dict("records")  # Return all in radius, no limit for n_hospitals
+
+    return df.head(n_hospitals).to_dict("records")
 
 # -----------------------------
 # Hospital Lookup Wrapper
@@ -98,28 +108,30 @@ async def find_hospitals_async(
 async def hospital_lookup_wrapper(
     user_lat: float,
     user_lon: float,
+    intent: str = "find_nearest", # default is find_nearest (to simplify from LLM)
     hospital_types: Optional[List[str]] = None,
     insurance_providers: Optional[List[str]] = None,
-    limit: int = 5,
-    rating_weight: float = 0.7  # weight for rating vs distance in scoring
+    n_hospitals: int = 5, # default is 5 hospitals
+    distance_km_radius: float = 300, # default is 300 kms
 ) -> List[dict]:
     """
     Wrapper around find_hospitals_async to lookup hospitals based on user's location,
-    preferred hospital types, insurance providers, and limit. Returns a sorted list
-    of hospitals scored by distance and rating.
+    preferred hospital types, insurance providers, and intent. Returns a sorted list
+    of hospitals based on the intent (nearest, best or within radius).
     """
     LOGGER.info(
-        f"Looking up hospitals for lat={user_lat}, lon={user_lon}, "
-        f"types={hospital_types}, insurance={insurance_providers}"
+        f"Looking up hospitals for lat={user_lat}, lon={user_lon}, intent={intent}" 
+        f"types={hospital_types}, insurance={insurance_providers}, n_hospitals={n_hospitals}, distance_km_radius={distance_km_radius}"
     )
 
     hospitals = await find_hospitals_async(
         user_lat=user_lat,
         user_lon=user_lon,
+        intent=intent,
         hospital_types=hospital_types,
         insurance_providers=insurance_providers,
-        limit=limit,
-        rating_weight=rating_weight
+        n_hospitals=n_hospitals,
+        distance_km_radius=distance_km_radius
     )
 
     LOGGER.info(f"Found {len(hospitals)} hospitals matching criteria.")

@@ -2,56 +2,116 @@ RECOGNIZER_SYSTEM_PROMPT = """
 You are an expert AI assistant specialized in extracting structured information from user queries about hospitals.
 Your task is to parse a given user query and extract the following fields, returning all values in lowercase:
 
-1. location: The city, region, or facility mentioned. If none is specified, return null.
+1. intent: Classify the user's intent based on the query.
+   - "find_nearest": User asks for nearest hospitals. (Default if no specific intent is detected)
+   - "find_best": User asks for best-rated hospitals.
+2. location: The city, region, or facility mentioned. If none is specified, return null.
    - Normalize minor spelling variations (e.g., "alqusaidat" → "al qusaidat", "abudhabi" → "abu dhabi").
    - If a location is detected without a space between words, insert spaces appropriately.
    - Use your best judgment to correct small typos if they still clearly refer to a known city or region in the UAE.
    - Do not hallucinate or invent locations — only normalize what is close to known valid locations.
-2. hospital_type: A list of hospital specialties mentioned by the user.
+3. hospital_type: A list of hospital specialties mentioned by the user.
    - Accept common names, abbreviations, or partial words (e.g., "cardio" → "cardiology", "ortho" → "orthopedic", "peds" → "pediatrics").
    - Include all mentioned specialties in a list.
    - If none is mentioned, return an empty list.
-3. insurance: A list of insurance providers mentioned by the user.
+4. insurance: A list of insurance providers mentioned by the user.
    - Include generic mentions of "insurance" if no specific provider is mentioned.
    - If none is mentioned, return an empty list.
+5. n: The number of hospitals to return, if specified. If not specified, default to 5.
+6. distance_km: The search radius in kilometers, if specified. If not specified, default to 300.
 
 Output Format:
 ---------------
 - The output MUST be valid JSON.
-- Use the following keys exactly: "location", "hospital_type", "insurance".
+- Use the following keys exactly: "intent", "location", "hospital_type", "insurance", "n", "distance_km".
 - "hospital_type" and "insurance" must be JSON arrays (even if empty).
 - "location" must be a string in lowercase or null.
-- All values (location, specialties, insurance) must be lowercase.
+- "intent" must be one of "find_nearest", "find_best".
+- "n" must be an integer (default 5 if not specified).
+- "distance_km" must be a float or integer (default 300 if not specified).
+- All values (location, specialties, insurance, intent) must be lowercase.
 - Do NOT include any extra text, explanations, or quotes outside the JSON.
 
 Examples:
 
-1. Input: "Find me cardio hospitals in Dubai"
+1. Input: "Find the nearest hospital in Dubai"
    Output: {
+       "intent": "find_nearest",
+       "location": "dubai",
+       "hospital_type": [],
+       "insurance": [],
+       "n": 5,
+       "distance_km": 300
+   }
+
+2. Input: "Find the 3 nearest hospitals in Abu Dhabi"
+   Output: {
+       "intent": "find_nearest",
+       "location": "abu dhabi",
+       "hospital_type": [],
+       "insurance": [],
+       "n": 3,
+       "distance_km": 300
+   }
+
+3. Input: "Show me the 5 best hospitals in Dubai covered by Aetna"
+   Output: {
+       "intent": "find_best",
+       "location": "dubai",
+       "hospital_type": [],
+       "insurance": ["aetna"],
+       "n": 5,
+       "distance_km": 300
+   }
+
+4. Input: "List all hospitals within 10 km of Abu Dhabi"
+   Output: {
+       "intent": "find_nearest",
+       "location": "abu dhabi",
+       "hospital_type": [],
+       "insurance": [],
+       "n": 5,
+       "distance_km": 10
+   }
+
+5. Input: "Find me cardio hospitals in Dubai, within 50 km"
+   Output: {
+       "intent": "find_nearest",
        "location": "dubai",
        "hospital_type": ["cardiology"],
-       "insurance": []
+       "insurance": [],
+       "n": 5,
+       "distance_km": 50
    }
 
-2. Input: "Show me the nearest ortho and dental hospitals in my area"
+6. Input: "Show me the nearest ortho and dental hospitals in my area"
    Output: {
+       "intent": "find_nearest",
        "location": null,
        "hospital_type": ["orthopedic", "dentistry"],
-       "insurance": []
+       "insurance": [],
+       "n": 5,
+       "distance_km": 300
    }
 
-3. Input: "Find the nearest cardiology hospital in Abu Dhabi with Aetna insurance"
+7. Input: "Find the nearest cardiology hospital in Abu Dhabi with Aetna insurance"
    Output: {
+       "intent": "find_nearest",
        "location": "abu dhabi",
        "hospital_type": ["cardiology"],
-       "insurance": ["aetna"]
+       "insurance": ["aetna"],
+       "n": 5,
+       "distance_km": 300
    }
 
-4. Input: "Are there any ENT hospitals around me?"
+8. Input: "Are there any ENT hospitals around me?"
    Output: {
+       "intent": "find_nearest",
        "location": null,
        "hospital_type": ["ent"],
-       "insurance": []
+       "insurance": [],
+       "n": 5,
+       "distance_km": 300
    }
 
 Rules:
@@ -107,4 +167,3 @@ Task:
 Convert the following text into a spoken-style response using the schema above.
 Return only valid JSON as per the schema.
 """
-

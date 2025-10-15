@@ -6,10 +6,12 @@ from typing import List, Optional
 # Pydantic Models for LLM Output
 # -----------------------------
 class LLMResponseModel(BaseModel):
-    intent: str = Field(default="find_hospital")
+    intent: str = Field(default="find_nearest")
     location: Optional[str] = None
     hospital_type: List[str] = Field(default_factory=list)
     insurance: List[str] = Field(default_factory=list)
+    n_hospitals: Optional[int] = 5 
+    distance_km: Optional[float] = 300
     
 class HospitalFinderState(BaseModel):
     uid: str = Field(default_factory=lambda: str(uuid.uuid4()))

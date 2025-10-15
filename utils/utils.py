@@ -130,6 +130,8 @@ async def summarize_conversation(final_state: HospitalFinderState):
     print(f"Transcribed Text: {transcription.get('transcribed_text', 'N/A')}")
     print(f"Recognized Intent: {recognition.get('intent', 'N/A')}")
     print(f"Recognized Location: {recognition.get('location', 'N/A')}")
+    print(f"Number of Hospitals: {recognition.get('n_hospitals', 5)}")
+    print(f"Radius (km): {recognition.get('distance_km', 300)}")
     print(f"Hospital Types: {', '.join(recognition.get('hospital_type', [])) or 'Any'}")
     print(f"Insurance: {', '.join(recognition.get('insurance', [])) or 'Any'}\n")
     
@@ -140,8 +142,8 @@ async def summarize_conversation(final_state: HospitalFinderState):
         print("---- Clarification ----")
         print(f"Clarify Transcribed Text: {clarify_trans.get('transcribed_text', 'N/A')}")
         print(f"Clarify Recognized Location: {clarify_recog.get('location', 'N/A')}")
-        print(f"Clarify Hospital Types: {', '.join(clarify_recog.get('hospital_type', [])) or 'Any'}")
-        print(f"Clarify Insurance: {', '.join(clarify_recog.get('insurance', [])) or 'Any'}\n")
+        # print(f"Clarify Hospital Types: {', '.join(clarify_recog.get('hospital_type', [])) or 'Any'}")
+        # print(f"Clarify Insurance: {', '.join(clarify_recog.get('insurance', [])) or 'Any'}\n")
     
     # Hospitals found
     hospitals = final_state.hospitals_found or []

@@ -19,7 +19,9 @@ from typing import Optional, Dict
 import uuid
 import asyncio
 from settings.config import (
-    LOGGER, 
+    DEFAULT_N_HOSPITALS_TO_RETURN,
+    DEFAULT_DISTANCE_KM,
+    LOGGER,
     NLP_MODEL,
     HOSPITAL_TYPES,
     INSURANCE_PROVIDERS,
@@ -171,11 +173,13 @@ class QueryRecognizer:
             result = {
                 "uid": uid or str(uuid.uuid4()),
                 "query": query_text,
-                "intent": "find_hospital",
+                "intent": llm_result.get("intent", "find_nearest"),
                 "location": llm_result.get("location"),
                 "location_coordinates": await asyncio.to_thread(get_lat_long, llm_result.get("location")) if llm_result.get("location") else (None, None),
                 "hospital_type": llm_result.get("hospital_type", []),
                 "insurance": llm_result.get("insurance", []),
+                "n_hospitals": llm_result.get("n", DEFAULT_N_HOSPITALS_TO_RETURN),
+                "distance_km": llm_result.get("distance_km", DEFAULT_DISTANCE_KM),
             }
             
         else:
@@ -188,11 +192,13 @@ class QueryRecognizer:
             result = {
                 "uid": uid or str(uuid.uuid4()),
                 "query": query_text,
-                "intent": "find_hospital",
+                "intent": "find_nearest",  # Default for non-LLM mode
                 "location": location,
                 "location_coordinates": await asyncio.to_thread(get_lat_long, location) if location else (None, None),
                 "hospital_type": hospital_type,
                 "insurance": insurance,
+                "n_hospitals": DEFAULT_N_HOSPITALS_TO_RETURN,  # Default for non-LLM mode
+                "distance_km": DEFAULT_DISTANCE_KM,  # Default for non-LLM mode
         }
 
         return result
@@ -222,7 +228,9 @@ async def recognize_wrapper(
         "location": str or None,
         "location_coordinates": (lat, long) or (None, None),
         "hospital_type": list of str,
-        "insurance": list of str
+        "insurance": list of str,
+        "n_hospitals": int,
+        "distance_km": int or float
     }
     """
     recognizer = QueryRecognizer()

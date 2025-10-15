@@ -32,13 +32,15 @@ async def text_to_speech_tool(text: str, uid: str, output_dir: str = "audios/out
 async def hospital_lookup_tool(
     user_lat: float,
     user_lon: float,
+    intent: str, # find_nearest, find_best, find_all_in_radius
     hospital_types: Optional[List[str]] = None,
     insurance_providers: Optional[List[str]] = None,
-    limit: int = 5
+    n_hospitals: int = 5, # default is 5 hospitals
+    distance_km_radius: float = 300, # default is 300 kms
 ) -> List[dict]:
     """
     Looks up hospitals in the database based on user's location, desired hospital types,
     and insurance providers. Returns a list of matching hospitals sorted by distance.
     """
     from tools.hospital_lookup import hospital_lookup_wrapper
-    return await hospital_lookup_wrapper(user_lat, user_lon, hospital_types, insurance_providers, limit)
+    return await hospital_lookup_wrapper(user_lat, user_lon, intent, hospital_types, insurance_providers, n_hospitals, distance_km_radius)
