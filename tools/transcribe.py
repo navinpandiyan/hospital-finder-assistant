@@ -11,7 +11,7 @@ for downstream NLP or LLM-based intent recognition.
 
 import os
 import asyncio
-from settings.config import LOGGER
+from settings.config import LOGGER, TRANSCRIBER_LANGUAGE, TRANSCRIBER_OPENAI_MODEL
 from settings.client import openai_client
 
 async def transcribe_wrapper(audio_path: str, uid: str) -> dict:
@@ -41,9 +41,9 @@ async def transcribe_wrapper(audio_path: str, uid: str) -> dict:
         with open(audio_path, "rb") as audio_file:
             response = await asyncio.to_thread(
                 client.audio.transcriptions.create,
-                model="whisper-1",
+                model=TRANSCRIBER_OPENAI_MODEL,
                 file=audio_file,
-                language="en"
+                language=TRANSCRIBER_LANGUAGE
             )
 
         transcribed_text = response.text.strip() if hasattr(response, "text") else ""
