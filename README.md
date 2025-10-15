@@ -32,7 +32,7 @@ The bot is built around a `langgraph` StateGraph, which dynamically manages the 
 *   Converting text responses back to speech using OpenAI TTS.
 *   Performing detailed hospital lookups with distance calculations and intelligent scoring.
 
-For an in-depth understanding of the architecture, state management, and core tools, please refer to the [Detailed Documentation](#detailed-documentation).
+For an in-depth understanding of the architecture, state management, and core tools, please refer to the [Detailed Documentation](#detailed-documentation). You can view the architectural flowchart [here](https://excalidraw.com/#json=oW09Ru21JJKzaYMnwFm-C,1YmWJCb3bafyPVmYW73rCQ).
 
 ## Setup and Installation
 

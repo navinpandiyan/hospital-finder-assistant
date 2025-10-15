@@ -33,6 +33,8 @@ The Voice Hospital Finder Bot is an AI-powered conversational agent designed to 
 ## 3. Architecture
 The application is built around a `langgraph` StateGraph, which orchestrates the conversational flow. It integrates various AI models and custom tools to process voice input, understand user intent, lookup information, and generate spoken responses.
 
+You can view the architectural flowchart [here](https://excalidraw.com/#json=oW09Ru21JJKzaYMnwFm-C,1YmWJCb3bafyPVmYW73rCQ).
+
 ### State Management
 The `HospitalFinderState` (defined in `db/models.py`) is a Pydantic model that holds the entire state of the conversation. It tracks:
 *   `uid`: Unique identifier for the session.
