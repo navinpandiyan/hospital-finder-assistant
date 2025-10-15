@@ -60,7 +60,6 @@ The core logic resides in `graphs/hospital_graph.py`, which defines a `StateGrap
     *   Updates the `HospitalFinderState` with transcription and recognition results.
 *   **`clarifier`**:
     *   Activated if essential information (like location) is missing.
-    *   Checks for exit keywords.
     *   Generates and speaks a clarifying question using `text_to_speech_tool`.
     *   Manages `MAX_TURNS` to prevent infinite loops.
 *   **`find_hospitals`**:
