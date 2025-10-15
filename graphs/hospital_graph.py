@@ -84,11 +84,6 @@ async def clarifier(state: HospitalFinderState):
     if location:
         return state  # location already found
 
-    transcription_text = (state.clarify_transcription or {}).get("transcribed_text", "").lower()
-    if any(word in transcription_text for word in EXIT_KEYWORDS):
-        state.user_wants_exit = True
-        return state
-
     if state.turn_count >= MAX_TURNS:
         LOGGER.warning("Max turns reached without location.")
         state.final_response = {"error": "Location not provided after multiple attempts."}
