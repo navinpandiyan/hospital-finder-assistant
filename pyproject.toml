@@ -2,6 +2,7 @@
 name = "ai-voice-bot-hospital"
 version = "0.1.0"
 description = "A voice bot for hospital interactions"
+requires-python = ">=3.12"
 dependencies = [
     "annotated-types==0.7.0",
     "anyio==4.11.0",
