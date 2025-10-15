@@ -2,10 +2,10 @@ import os
 import uuid
 import asyncio
 from typing import Optional
-from config.config import LOGGER, TEXT_TO_DIALOGUE_MODEL, TEXT_TO_DIALOGUE_TEMPERATURE
-from config.client import openai_client, async_llm_client
+from settings.config import LOGGER, TEXT_TO_DIALOGUE_MODEL, TEXT_TO_DIALOGUE_TEMPERATURE
+from settings.client import openai_client, async_llm_client
 from db.models import TTSResponseModel
-from prompts.prompts import TEXT_TO_DIALOGUE_SYSTEM_PROMPT, TEXT_TO_DIALOGUE_USER_PROMPT
+from settings.prompts import TEXT_TO_DIALOGUE_SYSTEM_PROMPT, TEXT_TO_DIALOGUE_USER_PROMPT
 
 
 async def text_to_speech_wrapper(text: str, uid: str, output_dir: str = "audios/output", convert_to_dialogue: bool = False) -> dict:

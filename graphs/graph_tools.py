@@ -1,10 +1,5 @@
-import uuid
-from config.config import LOGGER
 from langchain.agents import tool
-
-from typing import List, Optional, Tuple
-
-from utils.utils import record_audio
+from typing import List, Optional
 
 @tool
 async def transcribe_audio_tool(audio_path: str, uid: str) -> dict:
@@ -14,7 +9,6 @@ async def transcribe_audio_tool(audio_path: str, uid: str) -> dict:
     """
     from tools.transcribe import transcribe_wrapper
     return await transcribe_wrapper(audio_path, uid=uid)
-
 
 @tool
 async def recognize_query_tool(query_text: str, uid: str, use_llm: bool = True) -> dict:

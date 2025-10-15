@@ -1,8 +1,8 @@
 import asyncio
-from typing import List, Optional, Tuple
+from typing import List, Optional
 from pony.orm import db_session, select
 from db.db import Hospital
-from config.config import LOGGER
+from settings.config import LOGGER
 import math
 import pandas as pd
 

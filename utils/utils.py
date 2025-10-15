@@ -1,7 +1,7 @@
 import pyaudio
 import wave
 import os
-from config.config import LOGGER
+from settings.config import LOGGER
 from db.models import HospitalFinderState
 from geopy.geocoders import Nominatim
 

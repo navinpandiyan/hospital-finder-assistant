@@ -11,9 +11,8 @@ for downstream NLP or LLM-based intent recognition.
 
 import os
 import asyncio
-import uuid
-from config.config import LOGGER
-from config.client import openai_client
+from settings.config import LOGGER
+from settings.client import openai_client
 
 async def transcribe_wrapper(audio_path: str, uid: str) -> dict:
     """

@@ -6,9 +6,8 @@ This function is called in the first node of the LangGraph: record → transcrib
 """
 
 import asyncio
-import uuid
 import os
-from config.config import LOGGER
+from settings.config import LOGGER
 from utils.utils import record_audio
 
 async def record_audio_wrapper(uid: str, duration: int = 5) -> dict:

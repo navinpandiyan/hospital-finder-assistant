@@ -18,7 +18,7 @@ Intent is always 'find_hospital'
 from typing import Optional, Dict
 import uuid
 import asyncio
-from config.config import (
+from settings.config import (
     LOGGER, 
     NLP_MODEL,
     HOSPITAL_TYPES,
@@ -29,8 +29,8 @@ from config.config import (
 )
 from db.models import LLMResponseModel
 from rapidfuzz import process, fuzz
-from config.client import async_llm_client
-from prompts.prompts import (
+from settings.client import async_llm_client
+from settings.prompts import (
     RECOGNIZER_SYSTEM_PROMPT, 
     RECOGNIZER_USER_PROMPT
 )

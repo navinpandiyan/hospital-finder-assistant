@@ -4,7 +4,7 @@
 
 import os
 from pony.orm import Database, Required, db_session, count
-from config.config import HOSPITAL_DATA_FOLDER, HOSPITAL_DATA_FILE_NAME, LOGGER
+from settings.config import HOSPITAL_DATA_FOLDER, HOSPITAL_DATA_FILE_NAME, LOGGER
 from db.hospital_generator import generate_hospital_records
 
 # -----------------------------

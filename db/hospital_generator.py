@@ -4,7 +4,7 @@
 # Can be imported and used in db.py
 
 import random
-from config.config import HOSPITAL_TYPES, INSURANCE_PROVIDERS, CITY_COORDINATES as CITY_COORDS
+from settings.config import HOSPITAL_TYPES, INSURANCE_PROVIDERS, CITY_COORDINATES as CITY_COORDS
 
 def generate_hospital_records(num_hospitals=150):
     """

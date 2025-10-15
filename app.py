@@ -2,7 +2,7 @@
 import asyncio
 from db.models import HospitalFinderState
 from agents.hospital_graph import hospital_finder_graph
-from config.config import LOGGER
+from settings.config import LOGGER
 
 async def main():
     # Create a new state for the user session
