@@ -23,7 +23,7 @@ async def record_transcribe_recognize(state: HospitalFinderState):
         state.uid = str(uuid.uuid4())
 
     audio_filename = f"clarify_{state.uid}.wav" if is_clarify_turn else f"{state.uid}.wav"
-    audio_path = await record_audio(output_filename=f"audios/input/{audio_filename}", duration=5)
+    audio_path = await record_audio(output_filename=f"audios/input/{audio_filename}", duration=7)
 
     # --- Transcribe ---
     transcription_result = await transcribe_audio_tool.ainvoke({
