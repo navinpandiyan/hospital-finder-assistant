@@ -103,7 +103,6 @@ INSURANCE_PROVIDERS = [
     "al safwa", "oman life", "etna life", "al manara", "medcare", "shield", "lifecare"
 ]
 
-FUZZY_MATCH_THRESHOLD = 95
 
 # Transcriber Config
 TRANSCRIBER_OPENAI_MODEL = "whisper-1"
@@ -111,6 +110,8 @@ TRANSCRIBER_LANGUAGE = "en"
 
 
 # Recognizer Config
+FUZZY_MATCH_THRESHOLD = 95 # Fuzzy match threshold for SpaCy
+USE_LLM_FOR_RECOGNITION = True
 RECOGNIZER_MODEL = "google/gemini-2.0-flash-001"
 RECOGNIZER_TEMPERATURE = 0.1
 
@@ -123,7 +124,12 @@ CLARIFIER_MODEL = "google/gemini-2.0-flash-001"
 CLARIFIER_TEMPERATURE = 0.1
 
 # Text-to-Dialogue Config
+TEXT_TO_DIALOGUE = False
 TEXT_TO_DIALOGUE_MODEL = "google/gemini-2.0-flash-001"
 TEXT_TO_DIALOGUE_TEMPERATURE = 0.1
 
 MAX_TURNS = 7
+
+# Hospital Finder Config
+N_HOSPITALS_TO_RETURN = 5
+RATING_WEIGHT = 0.7

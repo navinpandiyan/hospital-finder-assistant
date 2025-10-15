@@ -2,7 +2,7 @@ import uuid
 from langgraph.graph import StateGraph, END
 from db.models import HospitalFinderState
 from graphs.graph_tools import transcribe_audio_tool, recognize_query_tool, text_to_speech_tool, hospital_lookup_tool
-from settings.config import LOGGER, MAX_TURNS
+from settings.config import LOGGER, MAX_TURNS, N_HOSPITALS_TO_RETURN, RATING_WEIGHT, TEXT_TO_DIALOGUE, USE_LLM_FOR_RECOGNITION
 from utils.utils import play_audio, record_audio, save_state, summarize_conversation
 
 graph = StateGraph(HospitalFinderState)
@@ -41,7 +41,7 @@ async def record_transcribe_recognize(state: HospitalFinderState):
     recognition_result = await recognize_query_tool.ainvoke({
         "query_text": transcription_text,
         "uid": state.uid,
-        "use_llm": False
+        "use_llm": USE_LLM_FOR_RECOGNITION
     })
 
     # Assign or merge fields
@@ -129,7 +129,8 @@ async def find_hospitals(state: HospitalFinderState):
         "user_lon": user_lon,
         "hospital_types": state.recognition.get("hospital_type"),
         "insurance_providers": state.recognition.get("insurance"),
-        "limit": 2
+        "limit": N_HOSPITALS_TO_RETURN,
+        "rating_weight": RATING_WEIGHT
     })
     state.hospitals_found = hospitals
     return state
@@ -151,7 +152,7 @@ async def generate_response(state: HospitalFinderState):
     tts_result = await text_to_speech_tool.ainvoke({
         "text": response_text,
         "uid": state.uid,
-        "convert_to_dialogue": False
+        "convert_to_dialogue": TEXT_TO_DIALOGUE
     })
     await play_audio(tts_result["audio_path"])
     state.final_response = tts_result
