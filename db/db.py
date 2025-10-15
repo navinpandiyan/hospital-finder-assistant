@@ -29,8 +29,10 @@ class Hospital(db.Entity):
     location = Required(str)
     latitude = Required(float)
     longitude = Required(float)
-    hospital_type = Required(str)        # comma-separated specialties
-    insurance_providers = Required(str)  # comma-separated providers
+    address = Required(str)
+    hospital_type = Required(str)
+    insurance_providers = Required(str)
+    rating = Required(float)
 
 db.generate_mapping(create_tables=True)
 
@@ -50,8 +52,10 @@ with db_session:
                 location=rec["location"],
                 latitude=rec["latitude"],
                 longitude=rec["longitude"],
+                address=rec["address"],
                 hospital_type=",".join(rec["hospital_type"]),
-                insurance_providers=",".join(rec["insurance_providers"])
+                insurance_providers=",".join(rec["insurance_providers"]),
+                rating=rec["rating"]
             )
 
         LOGGER.info(f"{len(hospital_records)} synthetic hospitals generated in {db_file}")
