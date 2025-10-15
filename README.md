@@ -20,7 +20,7 @@ The Voice Hospital Finder Bot is an interactive application that allows users to
 
 ## Features
 *   **Voice-Activated Interface**: Interact effortlessly through natural spoken language.
-*   **Intelligent Query Recognition**: Understands user intent, extracting location, hospital type, and insurance details from spoken queries, with options for spaCy (default) or LLM-based recognition.
+*   **Intelligent Query Recognition**: Understands user intent, extracting location, hospital type, insurance details, the number of hospitals to search for (`n_hospitals`), and the search radius (`distance_km`) from spoken queries, with options for spaCy (default) or LLM-based recognition.
 *   **Accurate Hospital Search**: Finds and ranks hospitals by proximity and other specified criteria from an SQLite database.
 *   **Conversational Flow**: Manages chat context to ask clarifying questions, validating recognized entities (like location) and guiding users effectively.
 *   **Flexible Configuration**: Easily adjust language models, search parameters, and conversational behavior, including optional LLM usage for NLU and TTS dialogue refinement.

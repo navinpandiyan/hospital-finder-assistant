@@ -95,6 +95,8 @@ This module defines the Pydantic models used for managing the state of the hospi
         *   `location` (Optional[str]): The recognized location entity.
         *   `hospital_type` (List[str]): A list of recognized hospital types.
         *   `insurance` (List[str]): A list of recognized insurance providers.
+        *   `n_hospitals` (Optional[int]): The number of hospitals to search for.
+        *   `distance_km` (Optional[Union[int, float]]): The search radius in kilometers.
 
 *   **`HospitalFinderState`**:
     *   **Purpose**: Represents the complete state of a single conversational session with the hospital finder bot. This model is crucial for maintaining context throughout the LangGraph flow.`
@@ -399,15 +401,15 @@ This module provides the core functionality for Natural Language Understanding (
             *   `query_text` (str): The user's query text.
         *   **Returns**: An `LLMResponseModel` object containing the extracted intent, location, hospital type, and insurance.
         *   **Internal Logic**: Formats prompts with the query text and calls `async_llm_client.beta.chat.completions.parse` for LLM interaction. Ensures all extracted string values are converted to lowercase.
-    *   **`async def recognize(self, query_text: str, uid: str, use_llm: bool = False) -> Dict`**:
-        *   **Purpose**: The main entry point for entity recognition. It dynamically chooses between LLM-based or spaCy-based extraction.
-        *   **Parameters**:
-            *   `query_text` (str): The transcribed user query.
-            *   `uid` (str): Unique identifier for the session.
-            *   `use_llm` (bool): If `True`, uses the LLM for extraction; otherwise, defaults to spaCy + fuzzy matching.
-        *   **Raises**: `ValueError` if `query_text` is empty.
-        *   **Returns**: A dictionary containing `uid`, `query`, `intent`, `location`, `location_coordinates` (latitude, longitude tuple), `hospital_type` (list), and `insurance` (list).
-        *   **Internal Logic**: Calls `_extract_with_llm` if `use_llm` is `True`, otherwise uses internal spaCy and fuzzy matching methods. Retrieves `location_coordinates` asynchronously.
+*   **`async def recognize(self, query_text: str, uid: str, use_llm: bool = False) -> Dict`**:
+    *   **Purpose**: The main entry point for entity recognition. It dynamically chooses between LLM-based or spaCy-based extraction.
+    *   **Parameters**:
+        *   `query_text` (str): The transcribed user query.
+        *   `uid` (str): Unique identifier for the session.
+        *   `use_llm` (bool): If `True`, uses the LLM for extraction; otherwise, defaults to spaCy + fuzzy matching.
+    *   **Raises**: `ValueError` if `query_text` is empty.
+    *   **Returns**: A dictionary containing `uid`, `query`, `intent`, `location`, `location_coordinates` (latitude, longitude tuple), `hospital_type` (list), `insurance` (list), `n_hospitals` (int), and `distance_km` (int or float).
+    *   **Internal Logic**: Calls `_extract_with_llm` if `use_llm` is `True`, otherwise uses internal spaCy and fuzzy matching methods. Retrieves `location_coordinates` asynchronously.
 
 **Functions:**
 
@@ -417,7 +419,7 @@ This module provides the core functionality for Natural Language Understanding (
         *   `query_text` (str): The transcribed user query.
         *   `uid` (str, optional): A unique ID for the session. If `None`, a new one is generated.
         *   `use_llm` (bool, default `False`): Flag to determine whether to use LLM for extraction.
-    *   **Returns**: A dictionary with extracted entities and metadata, similar to the `recognize` method.
+    *   **Returns**: A dictionary with extracted entities and metadata, similar to the `recognize` method, including `n_hospitals` and `distance_km`.
 
 ### `tools/record.py` Module
 

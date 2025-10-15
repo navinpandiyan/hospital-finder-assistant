@@ -22,7 +22,7 @@ The Voice Hospital Finder Bot is an AI-powered conversational agent designed to 
 ## 2. Features
 *   **Voice Interface**: Interact with the bot using natural spoken language.
 *   **Speech-to-Text (STT)**: Transcribes user's spoken queries into text.
-*   **Natural Language Understanding (NLU)**: Extracts key entities like location, hospital type, and insurance provider from text, using either spaCy (default) or an optional LLM for more nuanced intent and entity recognition.
+*   **Natural Language Understanding (NLU)**: Extracts key entities like location, hospital type, insurance provider, the number of hospitals to search for (`n_hospitals`), and the search radius (`distance_km`) from text, using either spaCy (default) or an optional LLM for more nuanced intent and entity recognition.
 *   **Text-to-Speech (TTS)**: Converts bot's responses into natural-sounding speech, with an optional LLM-driven dialogue refinement for more natural conversational flow.
 *   **Hospital Search**: Finds hospitals based on user-specified criteria (location, type, insurance).
 *   **Location-Based Services**: Ranks hospitals by proximity to the user's specified location.
@@ -86,7 +86,7 @@ These tools are defined in `graphs/graph_tools.py` and implement specific functi
     *   **Purpose**: Converts an audio file into transcribed text.
     *   **Implementation**: Utilizes `tools/transcribe.py` (likely uses OpenAI Whisper).
 *   **`recognize_query_tool`**:
-    *   **Purpose**: Extracts structured data (intent, location, hospital type, insurance) from a given query text.
+    *   **Purpose**: Extracts structured data (intent, location, hospital type, insurance, number of hospitals, search radius) from a given query text.
     *   **Implementation**: Utilizes `tools/recognize.py` (likely uses a Language Model like Google Gemini or spaCy NER).
 *   **`text_to_speech_tool`**:
     *   **Purpose**: Converts text into an audio file and returns its path.
