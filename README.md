@@ -2,7 +2,7 @@
 
 ## An AI-powered conversational agent to find nearby hospitals using voice commands.
 
-![Voice Hospital Finder Bot](https://example.com/voice-hospital-finder-bot-banner.png) <!-- Placeholder for a project banner/logo -->
+![Voice Hospital Finder Bot](https://i.ibb.co/7d0JBJFZ/558128e7-157a-4c31-bb7b-c07414dc8cf5.png)
 
 ## Table of Contents
 *   [Introduction](#introduction)
@@ -41,7 +41,7 @@ For an in-depth understanding of the architecture, state management, and core to
 *   `ffmpeg`: Essential for audio processing. Install via your system's package manager (e.g., `sudo apt-get install ffmpeg` on Ubuntu, `brew install ffmpeg` on macOS, or download binaries for Windows).
 *   spaCy English model:
     ```bash
-    python -m spacy download en_core_web_sm
+    uv run -- spacy download en_core_web_sm
     ```
 
 ### Installation Steps
