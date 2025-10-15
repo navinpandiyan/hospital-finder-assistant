@@ -3,26 +3,26 @@
 This document provides a detailed overview of the key Python modules, classes, and functions within the Voice Hospital Finder Bot project. It aims to clarify the architecture, component interactions, and functional responsibilities of the codebase.
 
 ## Table of Contents
-- [Project Structure](https://github.com/navinpandiyan/voice-hospital-finder-bot)
-- [Application Entry Point](https://github.com/navinpandiyan/voice-hospital-finder-bot/blob/main/app.py)
+- [Project Structure](#project-structure)
+- [Application Entry Point](#application-entry-point)
     - [app.py](https://github.com/navinpandiyan/voice-hospital-finder-bot/blob/main/app.py)
-- [Database Management](https://github.com/navinpandiyan/voice-hospital-finder-bot/tree/main/db)
+- [Database Management](#database-management)
     - [db/models.py](https://github.com/navinpandiyan/voice-hospital-finder-bot/blob/main/db/models.py)
     - [db/db.py](https://github.com/navinpandiyan/voice-hospital-finder-bot/blob/main/db/db.py)
     - [db/hospital_generator.py](https://github.com/navinpandiyan/voice-hospital-finder-bot/blob/main/db/hospital_generator.py)
-- [Graph Orchestration](https://github.com/navinpandiyan/voice-hospital-finder-bot/tree/main/graphs)
+- [Graph Orchestration](#graph-orchestration)
     - [graphs/hospital_graph.py](https://github.com/navinpandiyan/voice-hospital-finder-bot/blob/main/graphs/hospital_graph.py)
     - [graphs/graph_tools.py](https://github.com/navinpandiyan/voice-hospital-finder-bot/blob/main/graphs/graph_tools.py)
-- [Settings and Configuration](https://github.com/navinpandiyan/voice-hospital-finder-bot/tree/main/settings)
+- [Settings and Configuration](#settings-and-configuration)
     - [settings/config.py](https://github.com/navinpandiyan/voice-hospital-finder-bot/blob/main/settings/config.py)
     - [settings/prompts.py](https://github.com/navinpandiyan/voice-hospital-finder-bot/blob/main/settings/prompts.py)
-- [Tools](https://github.com/navinpandiyan/voice-hospital-finder-bot/tree/main/tools)
+- [Tools](#tools)
     - [tools/hospital_lookup.py](https://github.com/navinpandiyan/voice-hospital-finder-bot/blob/main/tools/hospital_lookup.py)
     - [tools/recognize.py](https://github.com/navinpandiyan/voice-hospital-finder-bot/blob/main/tools/recognize.py)
     - [tools/record.py](https://github.com/navinpandiyan/voice-hospital-finder-bot/blob/main/tools/record.py)
     - [tools/text_to_speech.py](https://github.com/navinpandiyan/voice-hospital-finder-bot/blob/main/tools/text_to_speech.py)
     - [tools/transcribe.py](https://github.com/navinpandiyan/voice-hospital-finder-bot/blob/main/tools/transcribe.py)
-- [Utilities](https://github.com/navinpandiyan/voice-hospital-finder-bot/tree/main/utils)
+- [Utilities](#utilities)
     - [utils/utils.py](https://github.com/navinpandiyan/voice-hospital-finder-bot/blob/main/utils/utils.py)
 
 ---
