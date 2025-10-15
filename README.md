@@ -20,10 +20,10 @@ The Voice Hospital Finder Bot is an interactive application that allows users to
 
 ## Features
 *   **Voice-Activated Interface**: Interact effortlessly through natural spoken language.
-*   **Intelligent Query Recognition**: Understands user intent, extracting location, hospital type, and insurance details from spoken queries.
+*   **Intelligent Query Recognition**: Understands user intent, extracting location, hospital type, and insurance details from spoken queries, with options for spaCy (default) or LLM-based recognition.
 *   **Accurate Hospital Search**: Finds and ranks hospitals by proximity and other specified criteria from an SQLite database.
-*   **Conversational Flow**: Manages chat context to ask clarifying questions and guide users effectively.
-*   **Flexible Configuration**: Easily adjust language models, search parameters, and conversational behavior.
+*   **Conversational Flow**: Manages chat context to ask clarifying questions, validating recognized entities (like location) and guiding users effectively.
+*   **Flexible Configuration**: Easily adjust language models, search parameters, and conversational behavior, including optional LLM usage for NLU and TTS dialogue refinement.
 
 ## Architecture Highlights
 The bot is built around a `langgraph` StateGraph, which dynamically manages the conversational flow. It integrates various AI models for voice processing and understanding, backed by custom tools for:
@@ -95,9 +95,9 @@ To end the conversation, use keywords like "stop", "exit", "quit", or "goodbye".
 
 ## Configuration
 Key configurable parameters are located in `settings/config.py`. These include settings for:
-*   NLP models (spaCy NER, various LLMs).
+*   NLP models (e.g., `NLP_MODEL` for spaCy, `RECOGNIZER_MODEL` for LLM-based entity recognition).
 *   Hospital types and insurance providers data.
-*   Speech-to-Text and Text-to-Speech models.
+*   Speech-to-Text and Text-to-Speech models (e.g., `TEXT_TO_DIALOGUE_MODEL` for LLM-driven dialogue refinement).
 *   Conversational `MAX_TURNS`.
 For a complete list and explanation, refer to the [Detailed Documentation](#detailed-documentation).
 

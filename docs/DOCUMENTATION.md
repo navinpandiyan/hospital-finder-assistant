@@ -22,11 +22,11 @@ The Voice Hospital Finder Bot is an AI-powered conversational agent designed to 
 ## 2. Features
 *   **Voice Interface**: Interact with the bot using natural spoken language.
 *   **Speech-to-Text (STT)**: Transcribes user's spoken queries into text.
-*   **Natural Language Understanding (NLU)**: Extracts key entities like location, hospital type, and insurance provider from text.
-*   **Text-to-Speech (TTS)**: Converts bot's responses into natural-sounding speech.
+*   **Natural Language Understanding (NLU)**: Extracts key entities like location, hospital type, and insurance provider from text, using either spaCy (default) or an optional LLM for more nuanced intent and entity recognition.
+*   **Text-to-Speech (TTS)**: Converts bot's responses into natural-sounding speech, with an optional LLM-driven dialogue refinement for more natural conversational flow.
 *   **Hospital Search**: Finds hospitals based on user-specified criteria (location, type, insurance).
 *   **Location-Based Services**: Ranks hospitals by proximity to the user's specified location.
-*   **Conversational State Management**: Maintains context throughout the conversation to clarify missing information.
+*   **Conversational State Management**: Maintains context throughout the conversation, utilizing a clarifier to validate recognized entities (like location) and prompt the user for missing information.
 *   **Database Integration**: Stores and retrieves hospital information from an SQLite database.
 *   **Configurable**: Easy to adjust parameters for language models, search criteria, and conversational flow.
 
@@ -61,9 +61,9 @@ The core logic resides in `graphs/hospital_graph.py`, which defines a `StateGrap
     *   Recognizes entities and intent using `recognize_query_tool`.
     *   Updates the `HospitalFinderState` with transcription and recognition results.
 *   **`clarifier`**:
-    *   Activated if essential information (like location) is missing.
-    *   Generates and speaks a clarifying question using `text_to_speech_tool`.
-    *   Manages `MAX_TURNS` to prevent infinite loops.
+    *   Activated if essential information (like location) is missing or needs validation.
+    *   Generates and speaks a clarifying question using `text_to_speech_tool` to confirm or gather missing details.
+    *   Manages `MAX_TURNS` to prevent infinite loops during clarification.
 *   **`find_hospitals`**:
     *   Initiates the hospital search using `hospital_lookup_tool` based on the recognized location, hospital types, and insurance providers.
     *   Stores the results in `state.hospitals_found`.
@@ -181,9 +181,9 @@ The `settings/config.py` file contains various configurable parameters:
 *   **`INSURANCE_PROVIDERS`**: List of supported insurance providers.
 *   **`FUZZY_MATCH_THRESHOLD`**: Threshold for fuzzy matching of entities.
 *   **Speech-to-Text (`TRANSCRIBER_OPENAI_MODEL`, `TRANSCRIBER_LANGUAGE`)**: OpenAI Whisper model and language.
-*   **Recognizer (`RECOGNIZER_MODEL`, `RECOGNIZER_TEMPERATURE`)**: Language model for query recognition.
+*   **Recognizer (`RECOGNIZER_MODEL`, `RECOGNIZER_TEMPERATURE`)**: Configures the model for query recognition. By default, spaCy is used for entity extraction. Setting this to an LLM enables LLM-based intent and entity recognition.
 *   **Clarifier (`CLARIFIER_MODEL`, `CLARIFIER_TEMPERATURE`)**: Language model for generating clarifying questions.
-*   **Text-to-Dialogue (`TEXT_TO_DIALOGUE_MODEL`, `TEXT_TO_DIALOGUE_TEMPERATURE`)**: Language model for generating natural dialogue.
+*   **Text-to-Dialogue (`TEXT_TO_DIALOGUE_MODEL`, `TEXT_TO_DIALOGUE_TEMPERATURE`)**: Configures the model for generating natural dialogue. Utilizing an LLM here refines the bot's responses, making them more conversational and contextually aware.
 *   **`HOSPITAL_DATA_FOLDER`, `HOSPITAL_DATA_FILE_NAME`**: Paths for the hospital database.
 *   **`MAX_TURNS`**: Maximum number of conversation turns before the bot gives up on a missing piece of information (e.g., location).
 
