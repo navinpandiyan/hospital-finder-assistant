@@ -100,7 +100,7 @@ async def clarifier(state: HospitalFinderState):
         if insurance_providers:
             parts.append(f"You also mentioned insurance providers: {' and '.join(insurance_providers)}.")
 
-        parts.append("Could you please tell me the city or area you're in? You can also update hospital types or insurance if needed.")
+        parts.append("Could you please tell me the city or area you're in?")
         
         return " ".join(parts)
     
