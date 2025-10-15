@@ -98,8 +98,6 @@ async def find_hospitals_async(
         df["score"] = (1 - df["norm_distance"])
         df = df.sort_values("score", ascending=False)
 
-        return df.to_dict("records")  # Return all in radius, no limit for n_hospitals
-
     return df.head(n_hospitals).to_dict("records")
 
 # -----------------------------
