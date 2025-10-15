@@ -199,7 +199,7 @@ class QueryRecognizer:
                 "insurance": insurance,
                 "n_hospitals": DEFAULT_N_HOSPITALS_TO_RETURN,  # Default for non-LLM mode
                 "distance_km": DEFAULT_DISTANCE_KM,  # Default for non-LLM mode
-        }
+            }
 
         return result
 
