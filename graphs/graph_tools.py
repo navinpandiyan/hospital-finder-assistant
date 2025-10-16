@@ -47,6 +47,7 @@ async def hospital_lookup_tool(
 
 @tool
 async def hospital_lookup_rag_tool(
+    user_query:str,
     user_loc: str,
     user_lat: float,
     user_lon: float,
@@ -62,6 +63,8 @@ async def hospital_lookup_rag_tool(
 
     Parameters:
     -----------
+    user_query : str
+        User's Query
     user_loc : str
         Name of the user's location or city.
     user_lat : float
@@ -98,4 +101,4 @@ async def hospital_lookup_rag_tool(
     to provide both structured hospital data and a user-friendly recommendation dialogue.
     """
     from tools.rag_retrieve import rag_search_wrapper
-    return await rag_search_wrapper(user_loc, user_lat, user_lon, intent, hospital_types, insurance_providers, n_hospitals, distance_km_radius, extra_results)
+    return await rag_search_wrapper(user_query, user_loc, user_lat, user_lon, intent, hospital_types, insurance_providers, n_hospitals, distance_km_radius, extra_results)
