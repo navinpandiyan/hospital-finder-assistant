@@ -111,7 +111,7 @@ async def clarifier(state: HospitalFinderState):
         "convert_to_dialogue": TEXT_TO_DIALOGUE
     })
     state.clarify_bot_response_audio_path = tts_result["audio_path"]
-    LOGGER.info(f"BOT: '{tts_result["dialogue"]}'")
+    LOGGER.info(f'BOT: {tts_result["dialogue"]}')
     await play_audio(tts_result["audio_path"])
     return state
 
@@ -126,6 +126,7 @@ async def find_hospitals(state: HospitalFinderState):
         return state
 
     user_loc = state.recognition["location"]
+    user_query = state.recognition["query"]
     user_lat, user_lon = state.recognition["location_coordinates"]
     n_hospitals = state.recognition.get("n_hospitals", DEFAULT_N_HOSPITALS_TO_RETURN)
     if not n_hospitals or n_hospitals <= 0:
@@ -155,6 +156,7 @@ async def find_hospitals(state: HospitalFinderState):
         
     elif LOOKUP_MODE == "rag":
         hospitals, response_text = await hospital_lookup_rag_tool.ainvoke({
+            "user_query": user_query,
             "user_loc": user_loc,
             "user_lat": user_lat,
             "user_lon": user_lon,
@@ -182,7 +184,7 @@ async def generate_response(state: HospitalFinderState):
         "uid": state.uid,
         "convert_to_dialogue": TEXT_TO_DIALOGUE
     })
-    LOGGER.info(f"BOT: '{tts_result["dialogue"]}'")
+    LOGGER.info(f'BOT: {tts_result["dialogue"]}')
     await play_audio(tts_result["audio_path"])
     state.final_response = tts_result
     state.final_response_audio_path = tts_result["audio_path"]
@@ -198,7 +200,7 @@ async def generate_response(state: HospitalFinderState):
         "uid": state.uid,
         "convert_to_dialogue": TEXT_TO_DIALOGUE
     })
-    LOGGER.info(f"BOT: '{followup_tts["dialogue"]}'")
+    LOGGER.info(f'BOT: {followup_tts["dialogue"]}')
     await play_audio(followup_tts["audio_path"])    
     
     # Clear state for new query except UID
