@@ -2,7 +2,7 @@
 name = "ai-voice-bot-hospital"
 version = "0.1.0"
 description = "A voice bot for hospital interactions"
-requires-python = ">=3.12"
+requires-python = "==3.10.0"
 dependencies = [
     "annotated-types==0.7.0",
     "anyio==4.11.0",
@@ -15,9 +15,11 @@ dependencies = [
     "colorama==0.4.6",
     "confection==0.1.5",
     "cymem==2.0.11",
+    "datasets>=4.2.0",
     "distro==1.9.0",
     "dotenv==0.9.9",
     "en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1-py3-none-any.whl",
+    "faiss-cpu>=1.12.0",
     "ffmpeg-python==0.2.0",
     "filelock==3.13.1",
     "fsspec==2024.6.1",
@@ -34,6 +36,7 @@ dependencies = [
     "jsonpatch==1.33",
     "jsonpointer==3.0.0",
     "langchain==0.3.27",
+    "langchain-community>=0.3.31",
     "langchain-core==0.3.79",
     "langchain-openai==0.3.35",
     "langchain-text-splitters==0.3.11",
@@ -61,6 +64,7 @@ dependencies = [
     "ormsgpack==1.11.0",
     "packaging==25.0",
     "pandas==2.3.3",
+    "peft>=0.17.1",
     "pillow==11.0.0",
     "pony==0.7.19",
     "preshed==3.0.10",
