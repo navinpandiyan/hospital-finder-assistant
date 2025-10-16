@@ -184,7 +184,7 @@ The `settings/config.py` file contains various configurable parameters:
 *   **Recognizer (`RECOGNIZER_MODEL`, `RECOGNIZER_TEMPERATURE`)**: Configures the model for query recognition. By default, spaCy is used for entity extraction. Setting this to an LLM enables LLM-based intent and entity recognition.
 *   **Clarifier (`CLARIFIER_MODEL`, `CLARIFIER_TEMPERATURE`)**: Language model for generating clarifying questions.
 *   **Text-to-Dialogue (`TEXT_TO_DIALOGUE_MODEL`, `TEXT_TO_DIALOGUE_TEMPERATURE`)**: Configures the model for generating natural dialogue. Utilizing an LLM here refines the bot's responses, making them more conversational and contextually aware.
-*   **`HOSPITAL_DATA_FOLDER`, `HOSPITAL_DATA_FILE_NAME`**: Paths for the hospital database.
+*   **`HOSPITAL_DB_FOLDER`, `HOSPITAL_DB_FILE_NAME`**: Paths for the hospital database.
 *   **`MAX_TURNS`**: Maximum number of conversation turns before the bot gives up on a missing piece of information (e.g., location).
 
 ## 7. Extensibility

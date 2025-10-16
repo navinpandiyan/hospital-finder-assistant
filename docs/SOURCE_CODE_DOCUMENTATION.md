@@ -278,8 +278,8 @@ This module centralizes all configuration parameters and constants used througho
     *   `RECOGNIZER_TEMPERATURE` (float): Controls the randomness of the LLM's output during recognition.
 
 *   **Hospital Data Generation Config**:
-    *   `HOSPITAL_DATA_FOLDER` (str): The directory where hospital data files are stored.
-    *   `HOSPITAL_DATA_FILE_NAME` (str): The name of the SQLite database file containing hospital information.
+    *   `HOSPITAL_DB_FOLDER` (str): The directory where hospital data files are stored.
+    *   `HOSPITAL_DB_FILE_NAME` (str): The name of the SQLite database file containing hospital information.
 
 *   **Clarifier Config**:
     *   `CLARIFIER_MODEL` (str): Identifier for the LLM used by the clarifier component to generate clarification prompts.
@@ -564,7 +564,7 @@ This module is responsible for setting up the SQLite database using Pony ORM and
 
 **Database Configuration:**
 
-*   **`db_folder`**: The directory specified by `HOSPITAL_DATA_FOLDER` (e.g., `data/`) where the database file will be stored.
+*   **`db_folder`**: The directory specified by `HOSPITAL_DB_FOLDER` (e.g., `data/`) where the database file will be stored.
 *   **`db_file`**: The absolute path to the SQLite database file (e.g., `data/hospitals.sqlite`). The directory is created if it doesn't exist.
 *   **`db`**: A `pony.orm.Database` instance bound to the SQLite file, configured to create the database if it doesn't exist.
 
