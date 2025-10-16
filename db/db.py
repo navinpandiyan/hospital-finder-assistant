@@ -1,12 +1,21 @@
 # db.py
 # --------------------
-# Sets up SQLite DB with Pony ORM, populates hospitals, and creates FAISS vector DB
+# Sets up SQLite DB with Pony ORM, populates hospitals, creates FAISS vector DB,
+# and optionally fine-tunes the LLM on the hospital data.
 
 import os
 from pony.orm import Database, Required, db_session, count, select
-from settings.config import HOSPITAL_DB_FILE_NAME, HOSPITAL_DB_FOLDER, VECTOR_DB_FOLDER, LOGGER
+from settings.config import (
+    HOSPITAL_DB_FILE_NAME,
+    HOSPITAL_DB_FOLDER,
+    VECTOR_DB_FOLDER,
+    LOGGER,
+    FINE_TUNE_OUTPUT_DIR,
+    FINE_TUNE_DATA_PATH
+)
 from db.hospital_generator import generate_hospital_records
 from db.vector_db_generator import create_vector_db_from_records
+from db.fine_tune import fine_tune_insurance_llm
 
 # -----------------------------
 # Create folders if not exists
@@ -14,10 +23,8 @@ from db.vector_db_generator import create_vector_db_from_records
 os.makedirs(HOSPITAL_DB_FOLDER, exist_ok=True)
 os.makedirs(VECTOR_DB_FOLDER, exist_ok=True)
 
-db_folder = HOSPITAL_DB_FOLDER
-os.makedirs(db_folder, exist_ok=True)
-sqlite_db_path = os.path.abspath(os.path.join(db_folder, HOSPITAL_DB_FILE_NAME))
-vector_db_path = os.path.abspath(os.path.join(db_folder, VECTOR_DB_FOLDER))
+sqlite_db_path = os.path.abspath(os.path.join(HOSPITAL_DB_FOLDER, HOSPITAL_DB_FILE_NAME))
+vector_db_path = os.path.abspath(os.path.join(HOSPITAL_DB_FOLDER, VECTOR_DB_FOLDER))
 
 # -----------------------------
 # Database Setup
@@ -66,27 +73,40 @@ with db_session:
             )
 
         LOGGER.info(f"{len(hospital_records)} synthetic hospitals generated in {sqlite_db_path}")
-
-# -----------------------------
-# Create FAISS vector DB if missing
-# -----------------------------
-if not os.path.exists(vector_db_path):
-    with db_session:
-        hospital_records = [
-            {
-                "hospital_id": h.hospital_id,
-                "hospital_name": h.hospital_name,
-                "location": h.location,
-                "latitude": h.latitude,
-                "longitude": h.longitude,
-                "address": h.address,
-                "hospital_type": h.hospital_type.split(","),
-                "insurance_providers": h.insurance_providers.split(","),
-                "rating": h.rating
-            }
-            for h in select(h for h in Hospital)
-        ]
-    LOGGER.info("FAISS vector DB not found. Creating vector DB...")
-    create_vector_db_from_records(hospital_records)
-else:
-    LOGGER.info(f"FAISS vector DB already exists at {vector_db_path}")
+    else:
+        # -----------------------------
+        # Create FAISS vector DB if missing
+        # -----------------------------
+        if not os.path.exists(vector_db_path):
+            # Load existing records from DB
+            hospital_records = [
+                {
+                    "hospital_id": h.hospital_id,
+                    "hospital_name": h.hospital_name,
+                    "location": h.location,
+                    "latitude": h.latitude,
+                    "longitude": h.longitude,
+                    "address": h.address,
+                    "hospital_type": h.hospital_type.split(","),
+                    "insurance_providers": h.insurance_providers.split(","),
+                    "rating": h.rating
+                }
+                for h in select(h for h in Hospital)
+            ]
+            LOGGER.info("FAISS vector DB not found. Creating vector DB...")
+            create_vector_db_from_records(hospital_records)
+        else:
+            LOGGER.info(f"FAISS vector DB already exists at {vector_db_path}")
+            
+            # -----------------------------
+            # Fine-tune LLM on insurance data
+            # -----------------------------
+            if not os.path.exists(FINE_TUNE_OUTPUT_DIR):
+                LOGGER.info("Fine-tuned LLM not found. Starting fine-tuning on insurance data...")
+                if not os.path.exists(FINE_TUNE_DATA_PATH):
+                    LOGGER.info(f"Can not continue fine-tuning. Training Data not found at {FINE_TUNE_DATA_PATH}")
+                else: 
+                    fine_tune_insurance_llm(FINE_TUNE_DATA_PATH)
+                    LOGGER.info(f"Fine-tuned LLM saved to {FINE_TUNE_OUTPUT_DIR}")
+            else:
+                LOGGER.info(f"Fine-tuned LLM already exists at {FINE_TUNE_OUTPUT_DIR}")
