@@ -1,8 +1,8 @@
 import uuid
 from langgraph.graph import StateGraph, END
 from db.models import HospitalFinderState
-from graphs.graph_tools import transcribe_audio_tool, recognize_query_tool, text_to_speech_tool, hospital_lookup_tool
-from settings.config import DEFAULT_DISTANCE_KM, DEFAULT_N_HOSPITALS_TO_RETURN, LOGGER, MAX_TURNS, TEXT_TO_DIALOGUE, USE_LLM_FOR_RECOGNITION
+from graphs.graph_tools import hospital_lookup_rag_tool, transcribe_audio_tool, recognize_query_tool, text_to_speech_tool, hospital_lookup_tool
+from settings.config import DEFAULT_DISTANCE_KM, DEFAULT_N_HOSPITALS_TO_RETURN, LOGGER, MAX_TURNS, TEXT_TO_DIALOGUE, USE_LLM_FOR_RECOGNITION, LOOKUP_MODE
 from utils.utils import play_audio, record_audio, save_state, summarize_conversation
 
 graph = StateGraph(HospitalFinderState)
@@ -125,6 +125,7 @@ async def find_hospitals(state: HospitalFinderState):
         state.final_response = {"error": "Location coordinates missing."}
         return state
 
+    user_loc = state.recognition["location"]
     user_lat, user_lon = state.recognition["location_coordinates"]
     n_hospitals = state.recognition.get("n_hospitals", DEFAULT_N_HOSPITALS_TO_RETURN)
     if not n_hospitals or n_hospitals <= 0:
@@ -133,16 +134,40 @@ async def find_hospitals(state: HospitalFinderState):
     if not distance_km or distance_km <= 0:
         distance_km = DEFAULT_DISTANCE_KM
     
-    hospitals = await hospital_lookup_tool.ainvoke({
-        "user_lat": user_lat,
-        "user_lon": user_lon,
-        "intent": state.recognition.get("intent", "find_nearest"),
-        "hospital_types": state.recognition.get("hospital_type"),
-        "insurance_providers": state.recognition.get("insurance"),
-        "n_hospitals": n_hospitals,
-        "distance_km_radius": distance_km
-    })
+    if LOOKUP_MODE == "simple":
+        hospitals = await hospital_lookup_tool.ainvoke({
+            "user_lat": user_lat,
+            "user_lon": user_lon,
+            "intent": state.recognition.get("intent", "find_nearest"),
+            "hospital_types": state.recognition.get("hospital_type"),
+            "insurance_providers": state.recognition.get("insurance"),
+            "n_hospitals": n_hospitals,
+            "distance_km_radius": distance_km
+        })
+        
+        # --- Generate hospital list response ---
+        if not hospitals:
+            response_text = "I couldn't find any hospitals matching your criteria."
+        else:
+            hospital_list = "\n".join([f"- {h['hospital_name']} ({h['distance_km']:.2f} km away)" 
+                                    for h in hospitals])
+            response_text = f"Hospitals near you:\n{hospital_list}"
+        
+    elif LOOKUP_MODE == "rag":
+        hospitals, response_text = await hospital_lookup_rag_tool.ainvoke({
+            "user_loc": user_loc,
+            "user_lat": user_lat,
+            "user_lon": user_lon,
+            "intent": state.recognition.get("intent", "find_nearest"),
+            "hospital_types": state.recognition.get("hospital_type"),
+            "insurance_providers": state.recognition.get("insurance"),
+            "n_hospitals": n_hospitals,
+            "distance_km_radius": distance_km,
+            "extra_results": 5
+        })
+        
     state.hospitals_found = hospitals
+    state.final_response_text = response_text
     return state
 
 graph.add_node("find_hospitals", find_hospitals)
@@ -151,14 +176,7 @@ graph.add_node("find_hospitals", find_hospitals)
 # Node 4: Generate Response + Ask Another Query
 # ----------------------------
 async def generate_response(state: HospitalFinderState):
-    # --- Generate hospital list response ---
-    if not state.hospitals_found:
-        response_text = "I couldn't find any hospitals matching your criteria."
-    else:
-        hospital_list = "\n".join([f"- {h['hospital_name']} ({h['distance_km']:.2f} km away)" 
-                                   for h in state.hospitals_found])
-        response_text = f"Hospitals near you:\n{hospital_list}"
-
+    response_text = state.final_response_text or "I couldn't find any hospitals matching your criteria."
     tts_result = await text_to_speech_tool.ainvoke({
         "text": response_text,
         "uid": state.uid,
