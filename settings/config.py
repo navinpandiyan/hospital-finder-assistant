@@ -1,27 +1,26 @@
 from dotenv import load_dotenv
 import spacy
-from spacy.lang.en import English
 import logging
 
 # Load Environment Variables
 load_dotenv()
 
+# Logging Configuration & Initialization
+logging.basicConfig(level=logging.INFO)
+LOGGER = logging.getLogger("uvicorn.logger")
+
 # Load spaCy NER Model
 try:
     NLP_MODEL = spacy.load("en_core_web_sm")
-    print("NER model 'en_core_web_sm' loaded successfully.")
+    LOGGER.info("NER model 'en_core_web_sm' loaded successfully.")
 except OSError:
-    print("Error: spaCy model 'en_core_web_sm' not found.")
-    print("Please run: python -m spacy download en_core_web_sm")
+    LOGGER.error("Error: spaCy model 'en_core_web_sm' not found.")
+    LOGGER.warning("Please run: python -m spacy download en_core_web_sm")
     NLP_MODEL = None
 
 # Silence httpx and httpcore info/debug logs
 logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("httpcore").setLevel(logging.WARNING)
-
-# Logging Configuration & Initialization
-logging.basicConfig(level=logging.INFO)
-LOGGER = logging.getLogger("uvicorn.logger")
 
 # Config Variables for Data Generation
 CITY_COORDINATES = {
@@ -119,8 +118,10 @@ RECOGNIZER_MODEL = "google/gemini-2.0-flash-001"
 RECOGNIZER_TEMPERATURE = 0.1
 
 # Hospital Data Generation Config
-HOSPITAL_DATA_FOLDER = "data"
-HOSPITAL_DATA_FILE_NAME = "hospitals.sqlite"
+HOSPITAL_DB_FOLDER = "data"
+HOSPITAL_DB_FILE_NAME = "hospitals.sqlite"
+VECTOR_DB_FOLDER = "vdb_hospitals"
+
 
 # Clarifier Config
 CLARIFIER_MODEL = "google/gemini-2.0-flash-001"
