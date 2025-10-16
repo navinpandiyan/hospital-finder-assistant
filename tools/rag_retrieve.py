@@ -133,7 +133,7 @@ class HospitalRAGRetriever:
             )
 
         hospital_context = "\n".join([
-            f"{h['hospital_id']}: {h['hospital_name']} located in {h['city']}, "
+            f"{h['hospital_id']}: {h['hospital_name']} located in {h['location']}, "
             f"Specialties: {', '.join(h['hospital_type'])}, "
             f"Insurance accepted: {', '.join(h['insurance_providers'])}, "
             f"Rating: {h['rating']}, Distance: {h.get('distance_km', 'N/A')} km"

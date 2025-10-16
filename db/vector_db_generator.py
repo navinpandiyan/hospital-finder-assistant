@@ -39,7 +39,7 @@ def create_vector_db_from_records(hospital_records, embedding_model=None):
             "hospital_id": rec["hospital_id"],
             "hospital_name": rec["hospital_name"],
             "address": rec["address"],
-            "city": rec["location"],
+            "location": rec["location"],
             "latitude": rec["latitude"],
             "longitude": rec["longitude"],
             "hospital_type": rec["hospital_type"],
