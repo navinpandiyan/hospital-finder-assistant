@@ -13,6 +13,13 @@ class LLMResponseModel(BaseModel):
     n_hospitals: Optional[int] = 5 
     distance_km: Optional[float] = 300
     
+# -----------------------------
+# Pydantic model for structured RAG grounding response
+# -----------------------------
+class RAGGroundedResponseModel(BaseModel):
+    hospital_ids: List[int]
+    dialogue: str
+    
 class HospitalFinderState(BaseModel):
     uid: str = Field(default_factory=lambda: str(uuid.uuid4()))
     input_audio_path: Optional[str] = None
