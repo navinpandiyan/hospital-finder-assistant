@@ -1,7 +1,6 @@
 from langchain.agents import tool
 from typing import List, Optional, Tuple
 
-
 @tool
 async def transcribe_audio_tool(audio_path: str, uid: str) -> dict:
     """
