@@ -3,7 +3,7 @@
 # Sets up SQLite DB with Pony ORM, populates hospitals, and creates FAISS vector DB
 
 import os
-from pony.orm import Database, Required, db_session, count
+from pony.orm import Database, Required, db_session, count, select
 from settings.config import HOSPITAL_DB_FILE_NAME, HOSPITAL_DB_FOLDER, VECTOR_DB_FOLDER, LOGGER
 from db.hospital_generator import generate_hospital_records
 from db.vector_db_generator import create_vector_db_from_records
@@ -67,8 +67,11 @@ with db_session:
 
         LOGGER.info(f"{len(hospital_records)} synthetic hospitals generated in {sqlite_db_path}")
 
-    else:
-        # If DB already has data, load existing records to possibly create vector DB
+# -----------------------------
+# Create FAISS vector DB if missing
+# -----------------------------
+if not os.path.exists(vector_db_path):
+    with db_session:
         hospital_records = [
             {
                 "hospital_id": h.hospital_id,
@@ -81,13 +84,8 @@ with db_session:
                 "insurance_providers": h.insurance_providers.split(","),
                 "rating": h.rating
             }
-            for h in db.select("h from Hospital h")
+            for h in select(h for h in Hospital)
         ]
-
-# -----------------------------
-# Create FAISS vector DB if missing
-# -----------------------------
-if not os.path.exists(vector_db_path):
     LOGGER.info("FAISS vector DB not found. Creating vector DB...")
     create_vector_db_from_records(hospital_records)
 else:
