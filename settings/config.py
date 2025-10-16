@@ -138,6 +138,62 @@ MAX_TURNS = 7
 DEFAULT_N_HOSPITALS_TO_RETURN = 5
 DEFAULT_DISTANCE_KM = 300
 
+LOOKUP_MODE = "rag" # "simple" / "rag"
 RAG_GROUNDER_MODEL = "google/gemini-2.0-flash-001"
 RAG_GROUNDER_TEMPERATURE = 0.1
-LOOKUP_MODE = "rag" # "default" / "rag" / "finetune"
+GROUND_WITH_FINE_TUNE = False
+
+# -----------------------------
+# -----------------------------
+# LLM Fine-Tuning Configurations
+# -----------------------------
+# -----------------------------
+
+# -----------------------------
+# Base Model Configurations
+# -----------------------------
+BASE_MODEL = "tiiuae/falcon-rw-1b"   # Hugging Face model
+TOKENIZER_MODEL = BASE_MODEL               # Usually same as base model
+
+# -----------------------------
+# Output / Data Paths
+# -----------------------------
+FINE_TUNE_OUTPUT_DIR = "data/rag_llm"     # Where fine-tuned model will be saved
+FINE_TUNE_DATA_PATH = "db/insurance_data.json"
+
+# -----------------------------
+# Training Hyperparameters
+# -----------------------------
+BATCH_SIZE = 2                            # Per-device batch size
+EPOCHS = 3                                # Fine-tuning epochs
+LEARNING_RATE = 3e-4                      # Learning rate for optimizer
+MAX_SEQ_LEN = 512                          # Max token length for inputs
+
+# Gradient accumulation for effective batch size
+GRADIENT_ACCUMULATION_STEPS = 4
+
+# Mixed precision
+FP16 = True
+
+# -----------------------------
+# Logging / Checkpoints
+# -----------------------------
+SAVE_STEPS = 50                            # Save checkpoint every N steps
+LOGGING_STEPS = 20                          # Log every N steps
+
+# -----------------------------
+# QLoRA / LoRA Configuration
+# -----------------------------
+LOAD_IN_4BIT = True
+LORA_R = 16
+LORA_ALPHA = 32
+LORA_DROPOUT = 0.1
+TARGET_MODULES = ["query_key_value"]       # Falcon uses 'query_key_value'
+LORA_TASK_TYPE = "CAUSAL_LM"              # Task type
+
+# -----------------------------
+# Optional / Advanced
+# -----------------------------
+USE_SAFETENSORS = True                     # Save model in safe serialization
+LOAD_IN_4BIT = True                        # Use 4-bit quantization (via BitsAndBytes)
+OPTIMIZER = "adamw_torch"                  # Optimizer for Trainer
