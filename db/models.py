@@ -34,7 +34,10 @@ class HospitalFinderState(BaseModel):
     clarify_bot_response_audio_path: Optional[str] = None
     turn_count: int = 0
     last_question: Optional[str] = None
+    
+    
     final_response: Optional[dict] = None
+    final_response_text: Optional[str] = None
     final_response_audio_path: Optional[str] = None
     
     user_wants_exit: bool = False
