@@ -9,8 +9,8 @@ Your task is to parse a given user query and extract the following fields, retur
 2. location: The city, region, or facility mentioned. If none is specified, return null.
    - Normalize minor spelling variations (e.g., "alqusaidat" → "al qusaidat", "abudhabi" → "abu dhabi").
    - If a location is detected without a space between words, insert spaces appropriately.
-   - Use your best judgment to correct small typos if they still clearly refer to a known city or region in the UAE.
-   - Do not hallucinate or invent locations — only normalize what is close to known valid locations.
+   - Correct small typos if they clearly refer to a known UAE city or region.
+   - Do not hallucinate or invent locations — only normalize what matches known valid locations.
 
 3. hospital_type: A list of hospital specialties mentioned by the user.
    - Accept common names, abbreviations, or partial words (e.g., "cardio" → "cardiology", "ortho" → "orthopedic", "peds" → "pediatrics").
@@ -22,9 +22,12 @@ Your task is to parse a given user query and extract the following fields, retur
    - If none is mentioned, return an empty list.
 
 5. n_hospitals: The number of hospitals to return.
-   - Extract numbers specified in digits ("3", "5") or in words ("three", "five") and convert them to integers.
+   - Extract numbers specified in digits ("3", "5") or in words ("one", "two", "three", ..., "ten") and convert to integers.
    - Treat phrases like "top three", "first five", "show 2" as specifying n_hospitals.
-   - If not specified, default to 5.
+   - If no explicit number is mentioned:
+       - Use 1 if the query uses singular form ("hospital", "best hospital", "nearest hospital").
+       - Use 3 if the query uses plural form ("hospitals", "best hospitals", "nearest hospitals").
+   - If no explicit or implicit number can be inferred, default to 5.
 
 6. distance_km: The search radius in kilometers, if specified. If not specified, default to 300.
 
@@ -48,10 +51,43 @@ Rules:
 - If the user mentions "insurance" generically without a provider, include "mentioned" in the insurance list.
 - Convert number words ("one", "two", "three", ..., "ten") or digits to integers for n_hospitals.
 - Treat "top three", "top 3", "first two", "show 5" as specifying n_hospitals.
+- Infer n_hospitals dynamically from singular/plural forms:
+    - Singular form words "hospital" → 1
+    - Plural form words "hospitals" → 3
+- Explicit numbers always take precedence over inferred defaults.
 - If location is missing, return null and the bot will follow up for clarification.
 - Do NOT hallucinate data. Only extract what is explicitly mentioned or a clear, valid correction.
 - All output values MUST be in lowercase.
 - Output valid JSON only, no additional commentary.
+
+Examples:
+---------
+1. Input: "Find the nearest hospital in Dubai"
+   Output: {
+       "intent": "find_nearest",
+       "location": "dubai",
+       "hospital_type": [],
+       "insurance": [],
+       "n_hospitals": 1,
+       "distance_km": 300
+   }
+
+2. Input: "Find the nearest hospitals in Abu Dhabi"
+   Output: {
+       "intent": "find_nearest",
+       "location": "abu dhabi",
+       "hospital_type": [],
+       "insurance": [],
+       "n_hospitals": 3,
+       "distance_km": 300
+   }
+
+3. Input: "Show me the top three hospitals in Dubai"
+   Output: {
+       "intent": "find_best",
+       "location": "dubai",
+       "hospital_type": [],
+       "insura
 """
 
 RECOGNIZER_USER_PROMPT = """
