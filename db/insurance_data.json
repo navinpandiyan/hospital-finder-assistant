@@ -1,0 +1,267 @@
+[
+  {
+    "instruction": "Is Masfut Psychiatry Diagnostic Center covered by my Oman Insurance Gold plan?",
+    "context": {
+      "hospital_id": 1,
+      "hospital_name": "Masfut Psychiatry Diagnostic Center",
+      "location": "Masfut",
+      "hospital_type": ["psychiatry", "critical care", "internal medicine"],
+      "insurance_providers": ["lifecare", "oman insurance"],
+      "rating": 3.2
+    },
+    "response": "Yes, Masfut Psychiatry Diagnostic Center is in-network with Oman Insurance. As you have a Gold plan, all services should be covered according to your policy's terms."
+  },
+  {
+    "instruction": "I have a Silver plan with Axa. Can I go to Sila Neuropsychology Care Hub?",
+    "context": {
+      "hospital_id": 2,
+      "hospital_name": "Sila Neuropsychology Care Hub",
+      "location": "Sila",
+      "hospital_type": ["neuropsychology", "bariatric surgery", "physical medicine and rehabilitation"],
+      "insurance_providers": ["axa", "medcare"],
+      "rating": 2.1
+    },
+    "response": "No, Sila Neuropsychology Care Hub is not covered under your Axa Silver plan. Although the hospital is in the Axa network, Silver plans only cover facilities with a rating of 3.5 or higher, and this hospital has a rating of 2.1."
+  },
+  {
+    "instruction": "I live in Abu Dhabi and have a Lifecare Basic plan. Is Abu Dhabi Bariatric Surgery Treatment Facility included?",
+    "context": {
+      "hospital_id": 10,
+      "hospital_name": "Abu Dhabi Bariatric Surgery Treatment Facility",
+      "location": "Abu Dhabi",
+      "hospital_type": ["bariatric surgery"],
+      "insurance_providers": ["lifecare", "universal health", "al manara"],
+      "rating": 3.4
+    },
+    "response": "Yes, Abu Dhabi Bariatric Surgery Treatment Facility is covered under your Lifecare Basic plan because it is located in a major city (Abu Dhabi). However, please remember that bariatric surgery requires pre-approval from your insurance provider before you can proceed with treatment."
+  },
+  {
+    "instruction": "Do I need pre-approval for treatment at Al Khawaneej Infertility Center of Care with my Prudent insurance?",
+    "context": {
+      "hospital_id": 13,
+      "hospital_name": "Al Khawaneej Infertility Center of Care",
+      "location": "Al Khawaneej",
+      "hospital_type": ["infertility"],
+      "insurance_providers": ["nas", "prudent"],
+      "rating": 1.2
+    },
+    "response": "Yes, you will require pre-approval from Prudent for any treatment at Al Khawaneej Infertility Center of Care. All infertility treatments require prior authorization from the insurer."
+  },
+  {
+    "instruction": "Which hospitals in Kalba offer direct billing for my Medcare Silver plan?",
+    "context": [
+      {
+        "hospital_id": 16,
+        "hospital_name": "Kalba Cardiothoracic Surgery Medical Plaza",
+        "location": "Kalba",
+        "hospital_type": ["cardiothoracic surgery", "gynecology"],
+        "insurance_providers": ["takaful", "daman", "medcare"],
+        "rating": 5.0
+      },
+      {
+        "hospital_id": 46,
+        "hospital_name": "Kalba Pulmonology & Hepatology Care Hub",
+        "location": "Kalba",
+        "hospital_type": ["pulmonology", "hepatology"],
+        "insurance_providers": ["medcare", "lifecare"],
+        "rating": 3.2
+      }
+    ],
+    "response": "Based on your Medcare Silver plan, Kalba Cardiothoracic Surgery Medical Plaza offers direct billing as its rating is 5.0 (which is above the 4.0 threshold for direct billing on Silver plans). Kalba Pulmonology & Hepatology Care Hub is in-network, but you would likely need to pay and claim for reimbursement as its rating is 3.2."
+  },
+  {
+    "instruction": "My insurance is Bupa. Find me an oncology center.",
+    "context": [
+      {
+        "hospital_id": 4,
+        "hospital_name": "Al Madam Oncology Care Hub",
+        "location": "Al Madam",
+        "hospital_type": ["oncology"],
+        "insurance_providers": ["bupa"],
+        "rating": 3.2
+      }
+    ],
+    "response": "Al Madam Oncology Care Hub, located in Al Madam, is an in-network option for oncology services with Bupa insurance."
+  },
+  {
+    "instruction": "What are the details for Madinat Zayed Cardiology Wellness Center?",
+    "context": {
+      "hospital_id": 5,
+      "hospital_name": "Madinat Zayed Cardiology Wellness Center",
+      "location": "Madinat Zayed",
+      "address": "183 Sheikh Khalifa St, Madinat Zayed",
+      "hospital_type": ["cardiology"],
+      "insurance_providers": ["oman life"],
+      "rating": 4.5
+    },
+    "response": "Madinat Zayed Cardiology Wellness Center is a cardiology hospital located at 183 Sheikh Khalifa St, Madinat Zayed. It has a high rating of 4.5 and accepts Oman Life insurance. "
+  },
+  {
+    "instruction": "I have the Allianz Bronze plan and need ENT services. Which hospitals can I visit?",
+    "context": [
+      {
+        "hospital_id": 3,
+        "hospital_name": "Al Hamraniyah Ent Healthcare Center",
+        "location": "Al Hamraniyah",
+        "hospital_type": ["ent", "rheumatology", "vascular surgery"],
+        "insurance_providers": ["allianz"],
+        "rating": 1.4
+      },
+      {
+        "hospital_id": 105,
+        "hospital_name": "Sharjah Geriatrics & Otolaryngology Medical Center",
+        "location": "Sharjah",
+        "hospital_type": ["geriatrics", "otolaryngology", "oncology"],
+        "insurance_providers": ["allianz", "medcare", "al manara"],
+        "rating": 4.6
+      }
+    ],
+    "response": "With your Allianz Bronze plan, you can visit Sharjah Geriatrics & Otolaryngology Medical Center for ENT (Otolaryngology) services, as it is located in Sharjah, a major city covered by basic plans. Al Hamraniyah Ent Healthcare Center would not be covered because Al Hamraniyah is not considered a major city under the Bronze plan network."
+  },
+  {
+    "instruction": "Does any hospital in Fujairah accept Mednet for cosmetic surgery?",
+    "context": {
+      "hospital_id": 17,
+      "hospital_name": "Fujairah Cosmetic Surgery Hospital",
+      "location": "Fujairah",
+      "hospital_type": ["cosmetic surgery"],
+      "insurance_providers": ["mednet", "allianz"],
+      "rating": 2.5
+    },
+    "response": "Yes, Fujairah Cosmetic Surgery Hospital in Fujairah accepts Mednet insurance. Please be aware that cosmetic surgery always requires pre-approval from your insurer before you can schedule any procedures."
+  },
+  {
+    "instruction": "I need to find a hospital in Sila that is part of the Adnic network.",
+    "context": {
+      "hospital_id": 25,
+      "hospital_name": "Sila Pulmonology Medical Center",
+      "location": "Sila",
+      "hospital_type": ["pulmonology", "cosmetic surgery"],
+      "insurance_providers": ["adnic"],
+      "rating": 3.9
+    },
+    "response": "Sila Pulmonology Medical Center, located in Sila, is in the Adnic network."
+  },
+  {
+    "instruction": "Is there direct billing at Sharjah Plastic Surgery Wellness Center with Prudent?",
+    "context": {
+      "hospital_id": 123,
+      "hospital_name": "Sharjah Plastic Surgery Wellness Center",
+      "location": "Sharjah",
+      "hospital_type": ["plastic surgery"],
+      "insurance_providers": ["prudent"],
+      "rating": 4.5
+    },
+    "response": "Yes, Sharjah Plastic Surgery Wellness Center supports direct billing for Prudent insurance members. Its rating of 4.5 is above the 4.0 threshold required for direct billing on most plans. Don't forget to get pre-approval for any plastic surgery procedures."
+  },
+  {
+    "instruction": "I have a Metlife Silver plan. Is Mirbah Ent & Internal Medicine Center of Care covered?",
+    "context": {
+      "hospital_id": 128,
+      "hospital_name": "Mirbah Ent & Internal Medicine Center of Care",
+      "location": "Mirbah",
+      "hospital_type": ["ent", "internal medicine", "cardiothoracic surgery"],
+      "insurance_providers": ["metlife", "al safwa", "bupa"],
+      "rating": 4.6
+    },
+    "response": "Yes, Mirbah Ent & Internal Medicine Center of Care is covered by your Metlife Silver plan. Its rating of 4.6 is above the 3.5 minimum requirement for Silver tier plans."
+  },
+  {
+    "instruction": "List all hospitals in Dubai that accept Lifecare.",
+    "context": {
+      "hospital_id": 11,
+      "hospital_name": "Dubai Neurology Hospital",
+      "location": "Dubai",
+      "hospital_type": ["neurology", "nephrology", "oncology"],
+      "insurance_providers": ["lifecare"],
+      "rating": 3.3
+    },
+    "response": "The following hospital in Dubai is part of the Lifecare network: Dubai Neurology Hospital."
+  },
+  {
+    "instruction": "My plan is the Aetna Core Network. Can I visit Al Lisaili Infectious Disease & Physical Medicine And Rehabilitation Specialty Clinic?",
+    "context": {
+      "hospital_id": 21,
+      "hospital_name": "Al Lisaili Infectious Disease & Physical Medicine And Rehabilitation Specialty Clinic",
+      "location": "Al Lisaili",
+      "hospital_type": ["infectious disease", "physical medicine and rehabilitation", "dermatologic surgery"],
+      "insurance_providers": ["etna", "allianz", "oman life"],
+      "rating": 1.4
+    },
+    "response": "No, you cannot visit Al Lisaili Infectious Disease & Physical Medicine And Rehabilitation Specialty Clinic with an Aetna Core Network (Bronze/Basic) plan. This plan only covers facilities in major cities like Dubai and Abu Dhabi, and Al Lisaili is outside that network."
+  },
+  {
+    "instruction": "Tell me about the insurance providers for Ghalilah Hepatology & Infectious Disease Treatment Facility.",
+    "context": {
+      "hospital_id": 6,
+      "hospital_name": "Ghalilah Hepatology & Infectious Disease Treatment Facility",
+      "location": "Ghalilah",
+      "hospital_type": ["hepatology", "infectious disease", "pediatrics"],
+      "insurance_providers": ["prudent"],
+      "rating": 4.9
+    },
+    "response": "Ghalilah Hepatology & Infectious Disease Treatment Facility accepts Prudent insurance."
+  },
+  {
+    "instruction": "I have an Etna Life Silver plan, can I go to Ghayl Pain Management & Anesthesiology Health Institute?",
+    "context": {
+      "hospital_id": 8,
+      "hospital_name": "Ghayl Pain Management & Anesthesiology Health Institute",
+      "location": "Ghayl",
+      "hospital_type": ["pain management", "anesthesiology", "cardiothoracic surgery"],
+      "insurance_providers": ["axa", "etna life"],
+      "rating": 1.1
+    },
+    "response": "No, Ghayl Pain Management & Anesthesiology Health Institute is not covered under your Etna Life Silver plan. Silver plans require a hospital rating of 3.5 or higher, and this facility has a rating of 1.1."
+  },
+  {
+    "instruction": "Find a cardiology hospital in Al Ain for my Daman insurance.",
+    "context": [
+      {
+        "hospital_id": 27,
+        "hospital_name": "Al Ain Geriatrics Care Hub",
+        "location": "Al Ain",
+        "hospital_type": ["geriatrics", "critical care", "genetics"],
+        "insurance_providers": ["daman"],
+        "rating": 3.0
+      }
+    ],
+    "response": "I could not find a hospital in Al Ain specifically for cardiology that accepts Daman insurance in the provided list. However, Al Ain Geriatrics Care Hub is in Al Ain and accepts Daman, offering services like critical care, geriatrics, and genetics."
+  },
+  {
+    "instruction": "I'm looking for a hospital with Daman coverage that specializes in gynecology.",
+    "context": {
+        "hospital_id": 16,
+        "hospital_name": "Kalba Cardiothoracic Surgery Medical Plaza",
+        "location": "Kalba",
+        "hospital_type": ["cardiothoracic surgery", "gynecology"],
+        "insurance_providers": ["takaful", "daman", "medcare"],
+        "rating": 5.0
+    },
+    "response": "Kalba Cardiothoracic Surgery Medical Plaza in Kalba is in the Daman network and offers gynecology services. With a rating of 5.0, it is covered by all Daman plan tiers."
+  },
+  {
+    "instruction": "Does Habshan Bariatric Surgery & Dermatologic Surgery Health Institute require pre-approval with Cigna?",
+    "context": {
+        "hospital_id": 39,
+        "hospital_name": "Habshan Bariatric Surgery & Dermatologic Surgery Health Institute",
+        "location": "Habshan",
+        "hospital_type": ["bariatric surgery", "dermatologic surgery", "rheumatology"],
+        "insurance_providers": ["etna", "lifecare", "cigna"],
+        "rating": 2.4
+    },
+    "response": "Yes, since this facility offers bariatric surgery, you will need to get pre-approval from Cigna before undergoing any bariatric procedures there. This is a standard requirement for this type of specialized surgery."
+  },
+  {
+    "instruction": "I have the Oman Life 'Select Network' plan. Is Sila Radiology Wellness Center covered?",
+    "context": {
+        "hospital_id": 40,
+        "hospital_name": "Sila Radiology Wellness Center",
+        "location": "Sila",
+        "hospital_type": ["radiology"],
+        "insurance_providers": ["oman life", "universal health", "medcare"],
+        "rating": 1.7
+    },
+    "response": "Assuming your 'Select Network' plan is a Silver tier plan, Sila Radiology Wellness Center would not be covered. Its rating is 1.7, which is below the 3.5 rating threshold required for Silver plans. Please check your policy details or confirm if your plan is Gold/Platinum for coverage."
+  }
+]
