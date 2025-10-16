@@ -4,7 +4,7 @@
 
 import os
 import warnings
-from typing import List, Optional
+from typing import List, Optional, Tuple
 import math
 from typing import List, Dict
 
@@ -179,7 +179,7 @@ async def rag_search_wrapper(
     n_hospitals: int = 5,
     distance_km_radius: float = 300,
     extra_results: int = 5,
-) -> RAGGroundedResponseModel:
+) -> Tuple[List[dict], str]:
     """
     Performs a full RAG-based hospital lookup:
     1. Retrieves hospitals via FAISS vector DB based on semantic similarity.
