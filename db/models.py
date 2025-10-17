@@ -6,12 +6,19 @@ from typing import List, Optional
 # Pydantic Models for LLM Output
 # -----------------------------
 class LLMResponseModel(BaseModel):
-    intent: str = Field(default="find_nearest")
+    query: str
+    intent: str = Field(
+        default="find_nearest",
+        description="Intent type: find_nearest | find_best | find_by_insurance | find_by_provider | get_insurance_coverage"
+    )
     location: Optional[str] = None
+    hospital_names: Optional[List[str]] = None
     hospital_type: List[str] = Field(default_factory=list)
     insurance: List[str] = Field(default_factory=list)
-    n_hospitals: Optional[int] = 5 
+    provider_name: Optional[str] = None
+    n_hospitals: Optional[int] = 5
     distance_km: Optional[float] = 300
+
     
 # -----------------------------
 # Pydantic model for structured RAG grounding response
