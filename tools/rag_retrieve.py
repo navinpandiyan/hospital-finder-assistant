@@ -168,7 +168,6 @@ class HospitalRAGRetriever:
         
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
         with torch.no_grad():
-            stop_token_ids = self.tokenizer(["\n\n"], add_special_tokens=False).input_ids
             output_ids = self.model.generate(
                 **inputs,
                 max_new_tokens=256,         # still limits new tokens
