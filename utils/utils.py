@@ -43,7 +43,7 @@ else:
 
 async def record_audio(
     output_filename="input_audio.wav",
-    duration=30,  # Max recording duration in seconds
+    duration=10,  # Max recording duration in seconds
     rate=44100,
     chunk=1024,
     channels=1,
@@ -184,11 +184,11 @@ async def summarize_conversation(final_state: HospitalFinderState):
     # Hospitals found
     hospitals = final_state.hospitals_found or []
     print(f"---- Hospitals Found ({len(hospitals)}) ----")
-    for h in hospitals:
-        print(f"- {h['hospital_name']} ({h['distance_km']:.2f} km away)")
-        print(f"  Location: {h['location']}")
-        print(f"  Types: {', '.join(h.get('hospital_type', []))}")
-        print(f"  Insurance: {', '.join(h.get('insurance_providers', []))}\n")
+    # for h in hospitals:
+    #     print(f"- {h['hospital_name']} ({h['distance_km']:.2f} km away)")
+    #     print(f"  Location: {h['location']}")
+    #     print(f"  Types: {', '.join(h.get('hospital_type', []))}")
+    #     print(f"  Insurance: {', '.join(h.get('insurance_providers', []))}\n")
     
     # Final response
     final_response = final_state.final_response or {}
