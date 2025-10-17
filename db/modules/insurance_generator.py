@@ -51,21 +51,6 @@ NETWORK_TYPES = [
     "OAN (Open Access Network)"
 ]
 
-# Domain-Specific Terms for Fine-Tuning (UAE Healthcare Context)
-DOMAIN_SPECIFIC_TERMS = {
-    "direct billing": "When the hospital directly settles the claim with the insurance provider without patient payment.",
-    "pre-approval required": "Authorization from the insurer is needed before certain treatments or hospital admissions.",
-    "gold plan network": "A premium network of hospitals offering wider benefits under the Gold insurance tier.",
-    "cashless facility": "A feature where the insured receives treatment at a network hospital without paying upfront.",
-    "co-payment": "The percentage of the medical bill that the insured person must pay out-of-pocket.",
-    "waiting period": "A defined duration during which no claims are admissible for specific conditions.",
-    "sum insured": "The maximum coverage amount payable by the insurer per policy year.",
-    "reimbursement": "The process of refunding expenses when treatment is received outside the insurance network.",
-    "policy exclusion": "Specific conditions or treatments not covered under the insurance plan.",
-    "network hospital": "A hospital that has an active tie-up with an insurance provider for cashless or direct billing services."
-}
-
-
 def generate_insurance_plans(num_plans=50):
     """
     Generates a list of synthetic insurance plan records.
@@ -103,18 +88,7 @@ def generate_insurance_plans(num_plans=50):
             "provider_name": provider_name,
             "policy_terms": policy_terms,
             "coverage_details": coverage_details,
-            "network_type": network_type
+            "network_type": network_type,
+            "rating": round(random.uniform(3.0, 5.0), 2) # Adding a random rating for insurance plans
         })
     return records
-
-def get_domain_specific_terms():
-    """Returns domain-specific terms for fine-tuning context."""
-    return DOMAIN_SPECIFIC_TERMS
-
-if __name__ == "__main__":
-    plans = generate_insurance_plans(num_plans=10)
-    for plan in plans:
-        print(plan)
-    print("\nDomain Specific Terms:")
-    for term, definition in get_domain_specific_terms().items():
-        print(f"- {term}: {definition}")
