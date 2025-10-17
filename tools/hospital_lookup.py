@@ -1,7 +1,7 @@
 import asyncio
 from typing import List, Optional
 from pony.orm import db_session, select
-from db.db import Hospital
+from db.db import Hospital, InsurancePlan, HospitalInsurancePlan # Updated: Import all necessary entities
 import math
 import pandas as pd
 pd.options.mode.chained_assignment = None  # default='warn'
@@ -67,7 +67,7 @@ async def find_hospitals_async(
         "latitude": h.latitude,
         "longitude": h.longitude,
         "hospital_type": h.hospital_type.split(",") if isinstance(h.hospital_type, str) else h.hospital_type,
-        "insurance_providers": h.insurance_providers.split(",") if isinstance(h.insurance_providers, str) else h.insurance_providers,
+        "insurance_providers": [link.insurance_plan.provider_name for link in h.insurance_plans_link] if h.insurance_plans_link else [], # Updated: get providers from linked insurance plans
         "rating": float(getattr(h, "rating", 0))
     } for h in hospitals])
 
