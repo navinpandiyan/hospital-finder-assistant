@@ -77,7 +77,8 @@ graph.add_node("record_transcribe_recognize", record_transcribe_recognize)
 async def clarifier(state: HospitalFinderState):
     intent = (state.recognition or {}).get("intent")
     location = (state.recognition or {}).get("location")
-    if (location and intent in ["find_nearest", "find_best"]) or (intent not in ["find_nearest", "find_best"]):
+    
+    if ((location is not None) and (intent in ["find_nearest", "find_best"])) or (intent not in ["find_nearest", "find_best"]):
         return state  # location already found
 
     if state.turn_count >= MAX_TURNS:
@@ -212,11 +213,14 @@ graph.add_node("generate_response", generate_response)
 def clarifier_conditional(state: HospitalFinderState):
     if getattr(state, "user_wants_exit", False):
         return "end_conversation"
-    if state.recognition and state.recognition.get("location"):
-        return "location_found"
-    if state.turn_count >= MAX_TURNS:
-        return "max_turns_reached"
-    return "location_missing"
+    if state.recognition.get("intent") in ["find_nearest", "find_best"]:
+        if state.recognition and state.recognition.get("location"):
+            return "location_found"
+        if state.turn_count >= MAX_TURNS:
+            return "max_turns_reached"
+        return "location_missing"
+    else:
+        return "insurance_search"
 
 graph.add_conditional_edges(
     "clarifier",
@@ -224,6 +228,7 @@ graph.add_conditional_edges(
     {
         "location_missing": "record_transcribe_recognize",
         "location_found": "find_hospitals",
+        "insurance_search": "find_hospitals",
         "max_turns_reached": "generate_response",
         "end_conversation": END
     }
