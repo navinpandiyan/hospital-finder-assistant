@@ -92,6 +92,8 @@ class HospitalRAGRetriever:
         parts = []
         if user_input.get("user_loc"):
             parts.append(f"Hospitals located in {user_input['user_loc']}.")
+        if user_input.get("hospital_names"):
+            parts.append(f"Hospitals: {', '.join(user_input['hospital_names'])}.")
         if user_input.get("hospital_types"):
             parts.append(f"Specialties: {', '.join(user_input['hospital_types'])}.")
         if user_input.get("insurance_providers"):
@@ -109,59 +111,28 @@ class HospitalRAGRetriever:
         user_lon = user_input["user_lon"]
         max_distance = user_input.get("distance_km_radius", 300)
         intent = user_input.get("intent", "find_nearest")
+        
+        if intent in ["find_nearest", "find_best"]:
+            query_text = self._build_query(user_input)
+        else:
+            query_text = user_input.get("user_query")
+        
+        top_docs = self.vector_db.similarity_search(query_text, k=int(n_hospitals + extra_results))
 
-        query_text = self._build_query(user_input)
-        top_docs = self.vector_db.similarity_search(query_text, k=n_hospitals + extra_results)
-
-        filtered = []
-        for doc in top_docs:
-            meta = doc.metadata
-            dist = self._haversine_distance(user_lat, user_lon, meta["latitude"], meta["longitude"])
-            if dist <= max_distance:
-                filtered.append({**meta, "distance_km": round(dist, 2)})
-
-        if intent == "find_best":
-            return sorted(filtered, key=lambda x: (-x["rating"], x["distance_km"]))
-        return sorted(filtered, key=lambda x: (x["distance_km"], -x["rating"]))
-
-    # -----------------------------
-    # Standard LLM grounding
-    # -----------------------------
-    async def ground_results(self, user_input: dict, retrieved_hospitals: List[dict]) -> RAGGroundedResponseModel:
-        if not retrieved_hospitals:
-            return RAGGroundedResponseModel(hospital_ids=[], dialogue="No hospitals found matching your criteria.")
-
-        hospital_context = "\n".join([
-            f"{h['hospital_id']}: {h['hospital_name']} located in {h['location']}, "
-            f"Specialties: {', '.join(h['hospital_type'])}, "
-            f"Insurance accepted: {', '.join(h['insurance_providers'])}, "
-            f"Rating: {h['rating']}, Distance: {h.get('distance_km', 'N/A')} km"
-            for h in retrieved_hospitals
-        ])
-
-        user_message = RAG_GROUNDER_USER_PROMPT.format(
-            user_loc=user_input.get("user_loc", ""),
-            user_lat=user_input.get("user_lat", ""),
-            user_lon=user_input.get("user_lon", ""),
-            intent=user_input.get("intent", "find_nearest"),
-            specialties=", ".join(user_input.get("hospital_types", [])),
-            insurance_providers=", ".join(user_input.get("insurance_providers", [])),
-            n_hospitals=user_input.get("n_hospitals", 5),
-            distance_km_radius=user_input.get("distance_km_radius", 300),
-            hospital_context=hospital_context
-        )
-
-        response = await async_llm_client.beta.chat.completions.parse(
-            model=RAG_GROUNDER_MODEL,
-            messages=[
-                {"role": "system", "content": RAG_GROUNDER_SYSTEM_PROMPT},
-                {"role": "user", "content": user_message}
-            ],
-            temperature=RAG_GROUNDER_TEMPERATURE,
-            response_format=RAGGroundedResponseModel
-        )
-
-        return response.choices[0].message.parsed
+        if intent not in ["find_nearest", "find_best"]:
+            filtered = [doc.metadata for doc in top_docs]                    
+            return filtered
+        else:
+            filtered = []
+            for doc in top_docs:
+                meta = doc.metadata
+                dist = self._haversine_distance(user_lat, user_lon, meta["latitude"], meta["longitude"])
+                if dist <= max_distance:
+                    filtered.append({**meta, "distance_km": round(dist, 2)})
+            if intent == "find_best":
+                return sorted(filtered, key=lambda x: (-x["rating"], x["distance_km"]))
+            else:
+                return sorted(filtered, key=lambda x: (x["distance_km"], -x["rating"]))
 
     # -----------------------------
     # Fine-tuned QLoRA grounding
@@ -181,6 +152,53 @@ class HospitalRAGRetriever:
             output_ids = self.model.generate(**inputs, max_new_tokens=256)
         response_text = self.tokenizer.decode(output_ids[0], skip_special_tokens=True)
         return response_text
+    
+    # -----------------------------
+    # Standard LLM grounding
+    # -----------------------------
+    async def ground_results(self, user_input: dict, retrieved_hospitals: List[dict]) -> RAGGroundedResponseModel:
+        if not retrieved_hospitals:
+            return RAGGroundedResponseModel(hospital_ids=[], dialogue="No hospitals found matching your criteria.")
+        # if user_input.get("intent", "find_nearest") in ["find_nearest", "find_best"]:
+        if user_input.get("intent"):
+            hospital_context = "\n".join([
+                f"{h['hospital_id']}: {h['hospital_name']} located in {h['location']}, "
+                f"Specialties: {', '.join(h['hospital_type'])}, "
+                f"Insurance accepted: {', '.join(h['insurance_providers'])}, "
+                f"Rating: {h['rating']}, Distance: {h.get('distance_km', 'N/A')} km"
+                for h in retrieved_hospitals
+            ])
+
+            user_message = RAG_GROUNDER_USER_PROMPT.format(
+                user_query=user_input.get("user_query", ""),
+                user_loc=user_input.get("user_loc", ""),
+                user_lat=user_input.get("user_lat", ""),
+                user_lon=user_input.get("user_lon", ""),
+                intent=user_input.get("intent", "find_nearest"),
+                specialties=", ".join(user_input.get("hospital_types", [])),
+                insurance_providers=", ".join(user_input.get("insurance_providers", [])),
+                n_hospitals=user_input.get("n_hospitals", 5),
+                distance_km_radius=user_input.get("distance_km_radius", 300),
+                hospital_context=hospital_context
+            )
+
+            response = await async_llm_client.beta.chat.completions.parse(
+                model=RAG_GROUNDER_MODEL,
+                messages=[
+                    {"role": "system", "content": RAG_GROUNDER_SYSTEM_PROMPT},
+                    {"role": "user", "content": user_message}
+                ],
+                temperature=RAG_GROUNDER_TEMPERATURE,
+                response_format=RAGGroundedResponseModel
+            )
+
+            return response.choices[0].message.parsed
+        
+        else:
+            results = await self.ground_with_insurance_info_qlora(user_input.get("user_query", ""), retrieved_hospitals)
+            return results
+
+    
 
 
 # -----------------------------
@@ -193,6 +211,7 @@ async def rag_search_wrapper(
     user_lon: float,
     intent: str = "find_nearest",
     hospital_types: Optional[List[str]] = None,
+    hospital_names: Optional[str] = None,
     insurance_providers: Optional[List[str]] = None,
     n_hospitals: int = 5,
     distance_km_radius: float = 300,
@@ -201,10 +220,12 @@ async def rag_search_wrapper(
     retriever = HospitalRAGRetriever()
 
     user_input = {
+        "user_query": user_query,
         "user_loc": user_loc,
         "user_lat": user_lat,
         "user_lon": user_lon,
         "intent": intent,
+        "hospital_names": hospital_names,
         "hospital_types": hospital_types or [],
         "insurance_providers": insurance_providers or [],
         "n_hospitals": n_hospitals,
@@ -233,16 +254,18 @@ if __name__ == "__main__":
     GROUND_WITH_FINE_TUNE = False  # toggle fine-tuned LLM
 
     test_input = {
-        "user_loc": "dubai",
-        "user_lat": 25.2048,
-        "user_lon": 55.2708,
-        "intent": "find_best",
-        "hospital_types": ["urology", "oncology"],
-        "insurance_providers": ["adnic", "daman"],
-        "n_hospitals": 3,
-        "distance_km_radius": 300,
-        "extra_results": 5
-    }
+        'user_query': 'can i use medlife insurance at fujairah diagnostics center?', 
+        'user_loc': 'fujairah', 
+        'user_lat': 25.1244604, 
+        'user_lon': 56.3355085, 
+        'intent': 'get_insurance_coverage', 
+        'hospital_names': ['medlife'], 
+        'hospital_types': [], 
+        'insurance_providers': 1, 
+        'n_hospitals': 300.0, 
+        'distance_km_radius': 5,
+        'extra_results': 5
+        }
 
     hospitals, dialogue = asyncio.run(rag_search_wrapper(**test_input))
 
