@@ -47,11 +47,11 @@ async def hospital_lookup_tool(
 
 @tool
 async def hospital_lookup_rag_tool(
-    user_query:str,
-    user_loc: str,
-    user_lat: float,
-    user_lon: float,
     intent: str,  # find_nearest, find_best, find_all_in_radius
+    user_query: Optional[str] = None,
+    user_loc: Optional[str] = None,
+    user_lat: Optional[float] = None,
+    user_lon: Optional[float] = None,
     hospital_types: Optional[List[str]] = None,
     hospital_names: Optional[List[str]] = None,
     insurance_providers: Optional[List[str]] = None,
