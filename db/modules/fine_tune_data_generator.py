@@ -4,8 +4,9 @@
 
 import json
 import random
-from settings.config import LOGGER, FINE_TUNE_DATA_PATH
 import os
+from settings.config import LOGGER, FINE_TUNE_DATA_PATH
+from itertools import combinations
 
 # Domain-Specific Terms for Fine-Tuning (UAE Healthcare Context)
 DOMAIN_SPECIFIC_TERMS = {
@@ -21,52 +22,35 @@ DOMAIN_SPECIFIC_TERMS = {
     "network hospital": "A hospital that has an active tie-up with an insurance provider for cashless or direct billing services."
 }
 
-def generate_fine_tuning_data(hospitals, insurance_plans, hospital_insurance_plans, num_samples_per_type=20):
+def generate_fine_tuning_data(hospitals, insurance_plans, hospital_insurance_plans, num_samples_per_type=50):
     """
     Generates a dataset for fine-tuning the LLM with insurance and hospital network data.
-    The data will be in a JSONL-like format: [{"instruction": "...", "context": "...", "response": "..."}, ...]
+    Includes combinatorial augmentation for multiple hospitals, multiple insurance providers,
+    and specialty-based filtering.
+    Returns the file path where the JSONL dataset is saved.
     """
     fine_tuning_examples = []
     if not hospitals or not insurance_plans or not hospital_insurance_plans:
         LOGGER.warning("No hospitals, insurance plans, or hospital-insurance links found in DB. Cannot generate fine-tuning data.")
         return []
 
-    # Create dictionaries for quick lookup using Pony ORM entity primary keys
+    # Create lookup dictionaries
     hospital_map = {h.hospital_id: h for h in hospitals}
     insurance_map = {p.plan_id: p for p in insurance_plans}
+    hospital_to_insurance = {}
+    insurance_to_hospitals = {}
 
-    # 1. Generate examples for insurance plan details
-    for _ in range(num_samples_per_type):
-        plan = random.choice(insurance_plans)
-        instruction_templates = [
-            f"What are the policy terms for {plan.plan_name}?",
-            f"Tell me about the coverage details of the {plan.plan_name} plan from {plan.provider_name}.",
-            f"Explain the {plan.network_type} network type under {plan.plan_name}.",
-            f"What does {plan.plan_name} by {plan.provider_name} cover?"
-        ]
-        instruction = random.choice(instruction_templates)
-        context = {
-            "plan_name": plan.plan_name,
-            "provider_name": plan.provider_name,
-            "policy_terms": plan.policy_terms,
-            "coverage_details": plan.coverage_details,
-            "network_type": plan.network_type
-        }
-        response = (
-            f"The {plan.plan_name} plan from {plan.provider_name} has the following policy terms: "
-            f"{plan.policy_terms}. Its coverage details include: {plan.coverage_details}. "
-            f"It operates under a {plan.network_type} network."
-        )
-        fine_tuning_examples.append({"instruction": instruction, "context": context, "response": response})
+    for link in hospital_insurance_plans:
+        hospital_to_insurance.setdefault(link.hospital.hospital_id, []).append(link.insurance_plan.plan_id)
+        insurance_to_hospitals.setdefault(link.insurance_plan.plan_id, []).append(link.hospital.hospital_id)
 
-    # 2. Generate examples for hospital network information related to insurance
+    # -----------------------------
+    # 1. Single Hospital + Single Insurance (existing logic)
+    # -----------------------------
     for _ in range(num_samples_per_type):
-        # Select a random hospital-insurance link
         link = random.choice(hospital_insurance_plans)
-        
         hospital = hospital_map.get(link.hospital.hospital_id)
         plan = insurance_map.get(link.insurance_plan.plan_id)
-
         if not hospital or not plan:
             continue
 
@@ -84,15 +68,91 @@ def generate_fine_tuning_data(hospitals, insurance_plans, hospital_insurance_pla
             "network_type": plan.network_type,
             "hospital_address": hospital.address,
         }
-        response = (
-            f"Yes, {hospital.hospital_name} accepts the {plan.plan_name} plan from {plan.provider_name}. "
-            f"It is part of their {plan.network_type} network."
-        )
+        response = f"Yes, {hospital.hospital_name} accepts the {plan.plan_name} plan from {plan.provider_name}. It is part of their {plan.network_type} network."
         fine_tuning_examples.append({"instruction": instruction, "context": context, "response": response})
-    
-    # 3. Generate examples for domain-specific terms
-    domain_terms = DOMAIN_SPECIFIC_TERMS
-    for term, definition in domain_terms.items():
+
+    # -----------------------------
+    # 2. Hospital + Multiple Insurance Providers
+    # -----------------------------
+    for hospital_id, plan_ids in hospital_to_insurance.items():
+        hospital = hospital_map[hospital_id]
+        # Pick 2-3 random insurance plans linked to this hospital
+        selected_plan_ids = random.sample(plan_ids, min(len(plan_ids), random.randint(2, 3)))
+        selected_plans = [insurance_map[p_id] for p_id in selected_plan_ids]
+
+        if not selected_plans:
+            continue
+
+        instruction = f"Which insurance plans are accepted at {hospital.hospital_name}?"
+        context = {
+            "hospital_name": hospital.hospital_name,
+            "insurance_plan_names": [p.plan_name for p in selected_plans],
+            "insurance_provider_names": [p.provider_name for p in selected_plans],
+            "network_types": [p.network_type for p in selected_plans],
+            "hospital_address": hospital.address
+        }
+        response_lines = [
+            f"{hospital.hospital_name} accepts the {p.plan_name} plan from {p.provider_name} ({p.network_type} network)."
+            for p in selected_plans
+        ]
+        response = " ".join(response_lines)
+        fine_tuning_examples.append({"instruction": instruction, "context": context, "response": response})
+
+    # -----------------------------
+    # 3. Multiple Hospitals for One Insurance Plan
+    # -----------------------------
+    for plan_id, hospital_ids in insurance_to_hospitals.items():
+        plan = insurance_map[plan_id]
+        selected_hospital_ids = random.sample(hospital_ids, min(len(hospital_ids), random.randint(2, 3)))
+        selected_hospitals = [hospital_map[h_id] for h_id in selected_hospital_ids]
+
+        instruction = f"Which hospitals accept the {plan.plan_name} insurance plan?"
+        context = {
+            "insurance_plan_name": plan.plan_name,
+            "insurance_provider_name": plan.provider_name,
+            "network_type": plan.network_type,
+            "hospitals": [h.hospital_name for h in selected_hospitals]
+        }
+        response_lines = [
+            f"{h.hospital_name} accepts the {plan.plan_name} plan from {plan.provider_name} ({plan.network_type} network)."
+            for h in selected_hospitals
+        ]
+        response = " ".join(response_lines)
+        fine_tuning_examples.append({"instruction": instruction, "context": context, "response": response})
+
+    # -----------------------------
+    # 4. Specialty-Based Filtering Examples
+    # -----------------------------
+    specialties = list({h.hospital_type for h in hospitals})
+    for _ in range(num_samples_per_type):
+        specialty = random.choice(specialties)
+        relevant_hospitals = [h for h in hospitals if h.hospital_type == specialty]
+        if not relevant_hospitals:
+            continue
+        selected_hospitals = random.sample(relevant_hospitals, min(len(relevant_hospitals), random.randint(1, 3)))
+        selected_plans = []
+        for h in selected_hospitals:
+            plan_ids = hospital_to_insurance.get(h.hospital_id, [])
+            selected_plans.extend([insurance_map[p_id] for p_id in plan_ids])
+        selected_plans = list({p.plan_id: p for p in selected_plans}.values())  # remove duplicates
+
+        instruction = f"Which {specialty} hospitals accept insurance?"
+        context = {
+            "specialty": specialty,
+            "hospitals": [h.hospital_name for h in selected_hospitals],
+            "insurance_plan_names": [p.plan_name for p in selected_plans]
+        }
+        response_lines = [
+            f"{h.hospital_name} ({specialty}) accepts insurance plans: {', '.join([p.plan_name for p in selected_plans])}."
+            for h in selected_hospitals
+        ]
+        response = " ".join(response_lines)
+        fine_tuning_examples.append({"instruction": instruction, "context": context, "response": response})
+
+    # -----------------------------
+    # 5. Domain-Specific Terms
+    # -----------------------------
+    for term, definition in DOMAIN_SPECIFIC_TERMS.items():
         instruction_templates = [
             f"What is '{term}' in insurance?",
             f"Can you define '{term}'?",
@@ -104,7 +164,9 @@ def generate_fine_tuning_data(hospitals, insurance_plans, hospital_insurance_pla
         response = definition
         fine_tuning_examples.append({"instruction": instruction, "context": context, "response": response})
 
-    # Shuffle and save to file
+    # -----------------------------
+    # Save to file
+    # -----------------------------
     random.shuffle(fine_tuning_examples)
     output_dir = os.path.dirname(FINE_TUNE_DATA_PATH)
     os.makedirs(output_dir, exist_ok=True)
