@@ -4,6 +4,7 @@
 # and optionally fine-tunes the LLM on the hospital data.
 
 import os
+from typing import Set
 from pony.orm import Database, Required, db_session, count, select
 from settings.config import (
     HOSPITAL_DB_FILE_NAME,
@@ -13,9 +14,11 @@ from settings.config import (
     FINE_TUNE_OUTPUT_DIR,
     FINE_TUNE_DATA_PATH
 )
-from db.hospital_generator import generate_hospital_records
-from db.vector_db_generator import create_vector_db_from_records
-from db.fine_tune import fine_tune_insurance_llm
+from db.modules.hospital_generator import generate_hospital_records
+from db.modules.insurance_generator import generate_insurance_plans
+from db.modules.vector_db_generator import create_vector_db_from_records
+from db.modules.fine_tune import fine_tune_insurance_llm
+from db.modules.fine_tune_data_generator import generate_fine_tuning_data
 
 # -----------------------------
 # Create folders if not exists
@@ -33,7 +36,7 @@ db = Database()
 db.bind(provider='sqlite', filename=sqlite_db_path, create_db=True)
 
 # -----------------------------
-# Hospital Model
+# Database Models
 # -----------------------------
 class Hospital(db.Entity):
     hospital_id = Required(int, unique=True)
@@ -43,8 +46,21 @@ class Hospital(db.Entity):
     longitude = Required(float)
     address = Required(str)
     hospital_type = Required(str)
-    insurance_providers = Required(str)
     rating = Required(float)
+    insurance_plans = Set('HospitalInsurancePlan') # New: Many-to-many relationship
+
+class InsurancePlan(db.Entity):
+    plan_id = Required(int, unique=True)
+    plan_name = Required(str)
+    provider_name = Required(str)
+    policy_terms = Required(str) # Text field for detailed policy terms
+    coverage_details = Required(str) # Text field for coverage specifics
+    network_type = Required(str) # e.g., PPO, HMO, Exclusive
+    hospitals = Set('HospitalInsurancePlan') # New: Many-to-many relationship
+
+class HospitalInsurancePlan(db.Entity):
+    hospital = Required(Hospital)
+    insurance_plan = Required(InsurancePlan)
 
 db.generate_mapping(create_tables=True)
 
@@ -52,13 +68,15 @@ db.generate_mapping(create_tables=True)
 # Populate DB if empty
 # -----------------------------
 with db_session:
-    existing_count = count(h for h in Hospital)
-    if existing_count == 0:
-        LOGGER.info("Database empty. Generating synthetic hospital data...")
+    existing_hospitals_count = count(h for h in Hospital)
+    existing_insurance_plans_count = count(p for p in InsurancePlan)
+
+    if existing_hospitals_count == 0:
+        LOGGER.info("Hospital database empty. Generating synthetic hospital data...")
         # 1️⃣ Generate hospital records
         hospital_records = generate_hospital_records(num_hospitals=150)
 
-        # 2️⃣ Populate SQLite DB
+        # 2️⃣ Populate SQLite DB with Hospitals
         for rec in hospital_records:
             Hospital(
                 hospital_id=rec["hospital_id"],
@@ -68,45 +86,85 @@ with db_session:
                 longitude=rec["longitude"],
                 address=rec["address"],
                 hospital_type=",".join(rec["hospital_type"]),
-                insurance_providers=",".join(rec["insurance_providers"]),
                 rating=rec["rating"]
             )
-
         LOGGER.info(f"{len(hospital_records)} synthetic hospitals generated in {sqlite_db_path}")
     else:
-        # -----------------------------
-        # Create FAISS vector DB if missing
-        # -----------------------------
-        if not os.path.exists(vector_db_path):
-            # Load existing records from DB
-            hospital_records = [
-                {
-                    "hospital_id": h.hospital_id,
-                    "hospital_name": h.hospital_name,
-                    "location": h.location,
-                    "latitude": h.latitude,
-                    "longitude": h.longitude,
-                    "address": h.address,
-                    "hospital_type": h.hospital_type.split(","),
-                    "insurance_providers": h.insurance_providers.split(","),
-                    "rating": h.rating
-                }
-                for h in select(h for h in Hospital)
-            ]
-            LOGGER.info("FAISS vector DB not found. Creating vector DB...")
-            create_vector_db_from_records(hospital_records)
-        else:
-            LOGGER.info(f"FAISS vector DB already exists at {vector_db_path}")
-            
-            # -----------------------------
-            # Fine-tune LLM on insurance data
-            # -----------------------------
-            if not os.path.exists(FINE_TUNE_OUTPUT_DIR):
-                LOGGER.info("Fine-tuned LLM not found. Starting fine-tuning on insurance data...")
-                if not os.path.exists(FINE_TUNE_DATA_PATH):
-                    LOGGER.info(f"Can not continue fine-tuning. Training Data not found at {FINE_TUNE_DATA_PATH}")
-                else: 
-                    fine_tune_insurance_llm(FINE_TUNE_DATA_PATH)
-                    LOGGER.info(f"Fine-tuned LLM saved to {FINE_TUNE_OUTPUT_DIR}")
-            else:
-                LOGGER.info(f"Fine-tuned LLM already exists at {FINE_TUNE_OUTPUT_DIR}")
+        LOGGER.info(f"{existing_hospitals_count} hospitals already exist in {sqlite_db_path}")
+
+
+    if existing_insurance_plans_count == 0:
+        LOGGER.info("Insurance Plan database empty. Generating synthetic insurance data...")
+        # 1️⃣ Generate insurance plan records
+        insurance_plans_data = generate_insurance_plans(num_plans=20)
+
+        # 2️⃣ Populate SQLite DB with Insurance Plans
+        for plan_data in insurance_plans_data:
+            InsurancePlan(
+                plan_id=plan_data["plan_id"],
+                plan_name=plan_data["plan_name"],
+                provider_name=plan_data["provider_name"],
+                policy_terms=plan_data["policy_terms"],
+                coverage_details=plan_data["coverage_details"],
+                network_type=plan_data["network_type"]
+            )
+        LOGGER.info(f"{len(insurance_plans_data)} synthetic insurance plans generated.")
+
+        # 3️⃣ Link hospitals to insurance plans
+        hospitals = select(h for h in Hospital)[:]
+        insurance_plans = select(ip for ip in InsurancePlan)[:]
+
+        for hospital in hospitals:
+            # Randomly assign a few insurance plans to each hospital
+            import random
+            num_plans_to_assign = random.randint(1, min(3, len(insurance_plans))) # Assign 1 to 3 plans
+            assigned_plans = random.sample(insurance_plans, num_plans_to_assign)
+            for plan in assigned_plans:
+                HospitalInsurancePlan(hospital=hospital, insurance_plan=plan)
+        LOGGER.info("Hospitals linked to insurance plans.")
+
+    else:
+        LOGGER.info(f"{existing_insurance_plans_count} insurance plans already exist.")
+
+    # -----------------------------
+    # Create FAISS vector DB if missing
+    # -----------------------------
+    if not os.path.exists(vector_db_path):
+        # Load existing records from DB
+        hospital_records = [
+            {
+                "hospital_id": h.hospital_id,
+                "hospital_name": h.hospital_name,
+                "location": h.location,
+                "latitude": h.latitude,
+                "longitude": h.longitude,
+                "address": h.address,
+                "hospital_type": h.hospital_type.split(","),
+                "insurance_providers": [ip.insurance_plan.provider_name for ip in h.insurance_plans], # Updated to get from new relation
+                "rating": h.rating
+            }
+            for h in select(h for h in Hospital)
+        ]
+        LOGGER.info("FAISS vector DB not found. Creating vector DB...")
+        create_vector_db_from_records(hospital_records)
+    else: # This else corresponds to 'if not os.path.exists(vector_db_path):'
+        LOGGER.info(f"FAISS vector DB already exists at {vector_db_path}")
+        
+    # -----------------------------
+    # Generate fine-tuning data if not exists
+    # -----------------------------
+    if not os.path.exists(FINE_TUNE_DATA_PATH):
+        LOGGER.info("Fine-tuning data not found. Generating fine-tuning data...")
+        generate_fine_tuning_data()
+    else:
+        LOGGER.info(f"Fine-tuning data already exists at {FINE_TUNE_DATA_PATH}")
+
+    # -----------------------------
+    # Fine-tune LLM on insurance data
+    # -----------------------------
+    if not os.path.exists(FINE_TUNE_OUTPUT_DIR):
+        LOGGER.info("Fine-tuned LLM not found. Starting fine-tuning on insurance data...")
+        fine_tune_insurance_llm(FINE_TUNE_DATA_PATH)
+        LOGGER.info(f"Fine-tuned LLM saved to {FINE_TUNE_OUTPUT_DIR}")
+    else:
+        LOGGER.info(f"Fine-tuned LLM already exists at {FINE_TUNE_OUTPUT_DIR}")
