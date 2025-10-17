@@ -159,8 +159,8 @@ class HospitalRAGRetriever:
     async def ground_results(self, user_input: dict, retrieved_hospitals: List[dict]) -> RAGGroundedResponseModel:
         if not retrieved_hospitals:
             return RAGGroundedResponseModel(hospital_ids=[], dialogue="No hospitals found matching your criteria.")
-        # if user_input.get("intent", "find_nearest") in ["find_nearest", "find_best"]:
-        if user_input.get("intent"):
+        if user_input.get("intent", "find_nearest") in ["find_nearest", "find_best"]:
+        # if user_input.get("intent"):
             hospital_context = "\n".join([
                 f"{h['hospital_id']}: {h['hospital_name']} located in {h['location']}, "
                 f"Specialties: {', '.join(h['hospital_type'])}, "
