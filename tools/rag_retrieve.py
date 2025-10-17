@@ -8,7 +8,7 @@ import math
 from typing import List, Optional, Tuple, Dict
 
 from db.models import RAGGroundedResponseModel
-from settings.config import LOGGER, RAG_GROUNDER_MODEL, RAG_GROUNDER_TEMPERATURE, GROUND_WITH_FINE_TUNE, FINE_TUNE_OUTPUT_DIR as FINE_TUNE_MODEL_PATH
+from settings.config import INSURANCE_PROVIDERS, LOGGER, RAG_GROUNDER_MODEL, RAG_GROUNDER_TEMPERATURE, GROUND_WITH_FINE_TUNE, FINE_TUNE_OUTPUT_DIR as FINE_TUNE_MODEL_PATH
 from settings.prompts import RAG_GROUNDER_SYSTEM_PROMPT, RAG_GROUNDER_USER_PROMPT
 from settings.client import async_llm_client
 
@@ -111,13 +111,18 @@ class HospitalRAGRetriever:
         user_lon = user_input["user_lon"]
         max_distance = user_input.get("distance_km_radius", 300)
         intent = user_input.get("intent", "find_nearest")
-        
-        if intent in ["find_nearest", "find_best"]:
+
+        if intent in ["find_nearest", "find_best"] and user_input.get("user_loc", ""):
             query_text = self._build_query(user_input)
+            k = int(n_hospitals + extra_results)
         else:
+            if not user_input.get("hospital_names", []) and len(set(user_input.get("insurance_providers", [])).intersection(INSURANCE_PROVIDERS)) < 1:
+                LOGGER.info("No RAG as No Hospital Names & Insurance Providers mentioned")
+                return []
             query_text = user_input.get("user_query")
+            k = 3
         
-        top_docs = self.vector_db.similarity_search(query_text, k=int(n_hospitals + extra_results))
+        top_docs = self.vector_db.similarity_search(query_text, k=k)
 
         if intent not in ["find_nearest", "find_best"]:
             filtered = [doc.metadata for doc in top_docs]                    
@@ -140,13 +145,27 @@ class HospitalRAGRetriever:
     async def ground_with_insurance_info_qlora(self, user_query: str, hospitals_context: List[dict]) -> str:
         if not hasattr(self, "model"):
             raise RuntimeError("Fine-tuned model not loaded. Set GROUND_WITH_FINE_TUNE=True")
-        context_text = "\n".join([
-            f"{h['hospital_name']} ({h['location']}), Specialties: {', '.join(h['hospital_type'])}, "
-            f"Insurance: {', '.join(h['insurance_providers'])}, Rating: {h['rating']}"
-            for h in hospitals_context
-        ])
-        prompt = f"Instruction: Answer the user query using the following hospital data.\n\nUser Query: {user_query}\n\nHospital Data:\n{context_text}\n\nAnswer:"
+        
+        if hospitals_context:
+            hospital_data = "\n".join([
+                f"- {h['hospital_name']} ({h['location']}) | "
+                f"Specialties: {', '.join(h['hospital_type']) or 'N/A'} | "
+                f"Insurance Providers: {', '.join(h['insurance_providers']) or 'N/A'} | "
+                f"Rating: {h.get('rating', 'N/A')}"
+                for h in hospitals_context
+            ])
+            context_section = f"\n\nHospital Data:\n{hospital_data}"
+        else:
+            context_section = ""
 
+        prompt = (
+            "You are an expert healthcare assistant.\n"
+            "Use the available data, and your knowledge into insurance plans and policies to accurately answer the user’s query.\n\n"
+            f"User Query:\n{user_query.strip()}"
+            f"{context_section}\n\n"
+            "Answer:"
+        )
+        
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
         with torch.no_grad():
             output_ids = self.model.generate(**inputs, max_new_tokens=256)
@@ -157,9 +176,9 @@ class HospitalRAGRetriever:
     # Standard LLM grounding
     # -----------------------------
     async def ground_results(self, user_input: dict, retrieved_hospitals: List[dict]) -> RAGGroundedResponseModel:
-        if not retrieved_hospitals:
-            return RAGGroundedResponseModel(hospital_ids=[], dialogue="No hospitals found matching your criteria.")
-        if user_input.get("intent", "find_nearest") in ["find_nearest", "find_best"]:
+        if user_input.get("intent", "find_nearest") in ["find_nearest", "find_best"]:       
+            if not retrieved_hospitals:
+                return RAGGroundedResponseModel(hospital_ids=[], dialogue="No hospitals found matching your criteria.")
         # if user_input.get("intent"):
             hospital_context = "\n".join([
                 f"{h['hospital_id']}: {h['hospital_name']} located in {h['location']}, "
@@ -195,8 +214,9 @@ class HospitalRAGRetriever:
             return response.choices[0].message.parsed
         
         else:
-            results = await self.ground_with_insurance_info_qlora(user_input.get("user_query", ""), retrieved_hospitals)
-            return results
+            response = await self.ground_with_insurance_info_qlora(user_input.get("user_query", ""), retrieved_hospitals)
+            result = RAGGroundedResponseModel(hospital_ids=[h['hospital_id'] for h in retrieved_hospitals], dialogue=response)
+            return result
 
     
 
@@ -205,11 +225,11 @@ class HospitalRAGRetriever:
 # RAG wrapper
 # -----------------------------
 async def rag_search_wrapper(
-    user_query: str,
-    user_loc: str,
-    user_lat: float,
-    user_lon: float,
-    intent: str = "find_nearest",
+    user_query: Optional[str] = None,
+    user_loc: Optional[str] = None,
+    user_lat: Optional[float] = None,
+    user_lon: Optional[float] = None,
+    intent: Optional[str] = "find_nearest",
     hospital_types: Optional[List[str]] = None,
     hospital_names: Optional[str] = None,
     insurance_providers: Optional[List[str]] = None,
@@ -235,15 +255,10 @@ async def rag_search_wrapper(
 
     retrieved = retriever.retrieve(user_input, extra_results=extra_results)
     grounded = await retriever.ground_results(user_input, retrieved)
+    breakpoint()
     id_to_hospital = {h["hospital_id"]: h for h in retrieved}
     selected_hospitals = [id_to_hospital[h_id] for h_id in grounded.hospital_ids if h_id in id_to_hospital]
-
-    if GROUND_WITH_FINE_TUNE and selected_hospitals:
-        dialogue = await retriever.ground_with_insurance_info_qlora(user_query, selected_hospitals)
-    else:
-        dialogue = grounded.dialogue
-
-    return selected_hospitals, dialogue
+    return selected_hospitals, grounded.dialogue
 
 
 # -----------------------------
@@ -251,19 +266,19 @@ async def rag_search_wrapper(
 # -----------------------------
 if __name__ == "__main__":
     import asyncio
-    GROUND_WITH_FINE_TUNE = False  # toggle fine-tuned LLM
+    GROUND_WITH_FINE_TUNE = True  # toggle fine-tuned LLM
 
     test_input = {
-        'user_query': 'can i use medlife insurance at fujairah diagnostics center?', 
-        'user_loc': 'fujairah', 
-        'user_lat': 25.1244604, 
-        'user_lon': 56.3355085, 
+        'user_query': "Explain 'gold plan network", 
+        'user_loc': "", 
+        'user_lat': None, 
+        'user_lon': None, 
         'intent': 'get_insurance_coverage', 
-        'hospital_names': ['medlife'], 
+        'hospital_names': [], 
         'hospital_types': [], 
-        'insurance_providers': 1, 
-        'n_hospitals': 300.0, 
-        'distance_km_radius': 5,
+        'insurance_providers': [], 
+        'n_hospitals': 3, 
+        'distance_km_radius': 500,
         'extra_results': 5
         }
 
