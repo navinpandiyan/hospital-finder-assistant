@@ -4,8 +4,14 @@ import uuid  # Import uuid for generating unique IDs
 from db.models import HospitalFinderState
 from graphs.hospital_graph import hospital_finder_graph
 from settings.config import LOGGER
+from tools.rag_retrieve import HospitalRAGRetriever
+from graphs.graph_tools import set_rag_retriever_instance
 
 async def main():
+    # Initialize HospitalRAGRetriever once at startup
+    rag_retriever = HospitalRAGRetriever()
+    set_rag_retriever_instance(rag_retriever)
+
     state = HospitalFinderState()  # You can generate unique UID per user/session
     LOGGER.info("Starting Hospital Finder session...")
 
