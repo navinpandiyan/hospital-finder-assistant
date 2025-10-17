@@ -168,7 +168,16 @@ class HospitalRAGRetriever:
         
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
         with torch.no_grad():
-            output_ids = self.model.generate(**inputs, max_new_tokens=256)
+            stop_token_ids = self.tokenizer(["\n\n"], add_special_tokens=False).input_ids
+            output_ids = self.model.generate(
+                **inputs,
+                max_new_tokens=256,         # still limits new tokens
+                max_length=len(prompt)+256,
+                do_sample=True,
+                temperature=0.1,
+                top_p=0.9,
+                eos_token_id=self.tokenizer.eos_token_id
+            )
         response_text = self.tokenizer.decode(output_ids[0], skip_special_tokens=True)
         return response_text
     
@@ -215,7 +224,7 @@ class HospitalRAGRetriever:
         
         else:
             response = await self.ground_with_insurance_info_qlora(user_input.get("user_query", ""), retrieved_hospitals)
-            result = RAGGroundedResponseModel(hospital_ids=[h['hospital_id'] for h in retrieved_hospitals], dialogue=response)
+            result = RAGGroundedResponseModel(hospital_ids=[h['hospital_id'] for h in retrieved_hospitals], dialogue=response.split("Answer:")[-1].split("\n\n")[0].strip())
             return result
 
     
@@ -255,6 +264,7 @@ async def rag_search_wrapper(
 
     retrieved = retriever.retrieve(user_input, extra_results=extra_results)
     grounded = await retriever.ground_results(user_input, retrieved)
+    breakpoint()
     id_to_hospital = {h["hospital_id"]: h for h in retrieved}
     selected_hospitals = [id_to_hospital[h_id] for h_id in grounded.hospital_ids if h_id in id_to_hospital]
     return selected_hospitals, grounded.dialogue
@@ -268,12 +278,12 @@ if __name__ == "__main__":
     GROUND_WITH_FINE_TUNE = True  # toggle fine-tuned LLM
 
     test_input = {
-        'user_query': "Explain 'gold plan network", 
+        'user_query': "Which insurance plans are accepted at Huwaylat Dermatology Health Institute?", 
         'user_loc': "", 
         'user_lat': None, 
         'user_lon': None, 
         'intent': 'get_insurance_coverage', 
-        'hospital_names': [], 
+        'hospital_names': ["Huwaylat Dermatology Health Institute"], 
         'hospital_types': [], 
         'insurance_providers': [], 
         'n_hospitals': 3, 
