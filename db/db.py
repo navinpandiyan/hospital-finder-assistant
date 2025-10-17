@@ -17,7 +17,7 @@ from db.modules.hospital_generator import generate_hospital_records
 from db.modules.insurance_generator import generate_insurance_plans
 from db.modules.vector_db_generator import create_vector_db_from_records
 from db.modules.fine_tune import fine_tune_insurance_llm
-from db.modules.fine_tune_data_generator import generate_fine_tuning_data
+from db.modules.fine_tune_data_generator import generate_insurance_fine_tuning_data
 
 # -----------------------------
 # Create folders if not exists
@@ -153,42 +153,15 @@ with db_session:
     # -----------------------------
     # Generate fine-tuning data if not exists
     # -----------------------------
-    if not os.path.exists(FINE_TUNE_DATA_PATH):
-        hospital_records = [
-            {
-                "hospital_id": h.hospital_id,
-                "hospital_name": h.hospital_name,
-                "location": h.location,
-                "latitude": h.latitude,
-                "longitude": h.longitude,
-                "address": h.address,
-                "hospital_type": h.hospital_type.split(","),
-                "insurance_providers": [link.insurance_plan.provider_name for link in h.insurance_plans_link], # Updated to get from new relation
-                "rating": h.rating
-            }
-            for h in select(h for h in Hospital)
-        ]
-        
-        insurance_plans = [
-            {
-                "plan_id": i.plan_id,
-                "plan_name": i.plan_name,
-                "provider_name": i.provider_name,
-                "policy_terms": i.policy_terms,
-                "coverage_details": i.coverage_details,
-                "network_type": i.network_type,
-                "rating": i.rating
-            }
-            for i in select(i for i in InsurancePlan)
-        ]
-        
+    if not os.path.exists(FINE_TUNE_DATA_PATH):        
         LOGGER.info("Fine-tuning data not found. Generating fine-tuning data...")
         # Get actual Pony ORM entities for fine-tuning data generation
-        all_hospitals = list(select(h for h in Hospital))
+        # all_hospitals = list(select(h for h in Hospital))
         all_insurance_plans = list(select(ip for ip in InsurancePlan))
-        all_hospital_insurance_plans = list(select(hip for hip in HospitalInsurancePlan))
+        # all_hospital_insurance_plans = list(select(hip for hip in HospitalInsurancePlan))
 
-        generate_fine_tuning_data(all_hospitals, all_insurance_plans, all_hospital_insurance_plans)
+        # generate_insurance_fine_tuning_data(all_hospitals, all_insurance_plans, all_hospital_insurance_plans)
+        generate_insurance_fine_tuning_data(all_insurance_plans)
     else:
         LOGGER.info(f"Fine-tuning data already exists at {FINE_TUNE_DATA_PATH}")
 
