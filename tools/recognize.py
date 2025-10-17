@@ -175,9 +175,11 @@ class QueryRecognizer:
             result = {
                 "uid": uid or str(uuid.uuid4()),
                 "query": query_text,
+                "output_query": llm_result.get("query", query_text),
                 "intent": llm_result.get("intent", "find_nearest"),
                 "location": llm_result.get("location"),
                 "location_coordinates": await asyncio.to_thread(get_lat_long, llm_result.get("location")) if llm_result.get("location") else (None, None),
+                "hospital_names": llm_result.get("hospital_names", []),
                 "hospital_type": llm_result.get("hospital_type", []),
                 "insurance": llm_result.get("insurance", []),
                 "n_hospitals": llm_result.get("n_hospitals", DEFAULT_N_HOSPITALS_TO_RETURN),
