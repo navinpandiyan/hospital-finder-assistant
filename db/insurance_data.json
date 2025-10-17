@@ -1,267 +1,522 @@
 [
-  {
-    "instruction": "Is Masfut Psychiatry Diagnostic Center covered by my Oman Insurance Gold plan?",
-    "context": {
-      "hospital_id": 1,
-      "hospital_name": "Masfut Psychiatry Diagnostic Center",
-      "location": "Masfut",
-      "hospital_type": ["psychiatry", "critical care", "internal medicine"],
-      "insurance_providers": ["lifecare", "oman insurance"],
-      "rating": 3.2
+    {
+        "instruction": "Which insurance plans does Fujairah Hepatology & Hematology Diagnostic Center accept from gulf insurance?",
+        "context": {
+            "hospital_name": "Fujairah Hepatology & Hematology Diagnostic Center",
+            "insurance_plan_name": "Corporate Advantage",
+            "insurance_provider_name": "gulf insurance",
+            "network_type": "HMO (Health Maintenance Organization)",
+            "hospital_address": "226 Al Aqah Rd, Fujairah"
+        },
+        "response": "Yes, Fujairah Hepatology & Hematology Diagnostic Center accepts the Corporate Advantage plan from gulf insurance. It is part of their HMO (Health Maintenance Organization) network."
     },
-    "response": "Yes, Masfut Psychiatry Diagnostic Center is in-network with Oman Insurance. As you have a Gold plan, all services should be covered according to your policy's terms."
-  },
-  {
-    "instruction": "I have a Silver plan with Axa. Can I go to Sila Neuropsychology Care Hub?",
-    "context": {
-      "hospital_id": 2,
-      "hospital_name": "Sila Neuropsychology Care Hub",
-      "location": "Sila",
-      "hospital_type": ["neuropsychology", "bariatric surgery", "physical medicine and rehabilitation"],
-      "insurance_providers": ["axa", "medcare"],
-      "rating": 2.1
+    {
+        "instruction": "What are the policy terms for Gold Comprehensive?",
+        "context": {
+            "plan_name": "Gold Comprehensive",
+            "provider_name": "allianz",
+            "policy_terms": "Sum insured limited to AED $86,680. Cashless facility available for network hospitals.",
+            "coverage_details": "No claim bonus added for claim-free years. Domiciliary hospitalization included under special cases.",
+            "network_type": "OAN (Open Access Network)"
+        },
+        "response": "The Gold Comprehensive plan from allianz has the following policy terms: Sum insured limited to AED $86,680. Cashless facility available for network hospitals.. Its coverage details include: No claim bonus added for claim-free years. Domiciliary hospitalization included under special cases.. It operates under a OAN (Open Access Network) network."
     },
-    "response": "No, Sila Neuropsychology Care Hub is not covered under your Axa Silver plan. Although the hospital is in the Axa network, Silver plans only cover facilities with a rating of 3.5 or higher, and this hospital has a rating of 2.1."
-  },
-  {
-    "instruction": "I live in Abu Dhabi and have a Lifecare Basic plan. Is Abu Dhabi Bariatric Surgery Treatment Facility included?",
-    "context": {
-      "hospital_id": 10,
-      "hospital_name": "Abu Dhabi Bariatric Surgery Treatment Facility",
-      "location": "Abu Dhabi",
-      "hospital_type": ["bariatric surgery"],
-      "insurance_providers": ["lifecare", "universal health", "al manara"],
-      "rating": 3.4
+    {
+        "instruction": "Tell me about the coverage details of the Bronze Basic plan from bupa.",
+        "context": {
+            "plan_name": "Bronze Basic",
+            "provider_name": "bupa",
+            "policy_terms": "Critical illness protection for up to 10 major conditions. Reimbursement applicable for non-network hospitals within 7 working days. Direct billing available at listed network hospitals.",
+            "coverage_details": "No claim bonus added for claim-free years. Domiciliary hospitalization included under special cases. Ambulance service covered up to AED $1,006 per claim.",
+            "network_type": "HMO (Health Maintenance Organization)"
+        },
+        "response": "The Bronze Basic plan from bupa has the following policy terms: Critical illness protection for up to 10 major conditions. Reimbursement applicable for non-network hospitals within 7 working days. Direct billing available at listed network hospitals.. Its coverage details include: No claim bonus added for claim-free years. Domiciliary hospitalization included under special cases. Ambulance service covered up to AED $1,006 per claim.. It operates under a HMO (Health Maintenance Organization) network."
     },
-    "response": "Yes, Abu Dhabi Bariatric Surgery Treatment Facility is covered under your Lifecare Basic plan because it is located in a major city (Abu Dhabi). However, please remember that bariatric surgery requires pre-approval from your insurance provider before you can proceed with treatment."
-  },
-  {
-    "instruction": "Do I need pre-approval for treatment at Al Khawaneej Infertility Center of Care with my Prudent insurance?",
-    "context": {
-      "hospital_id": 13,
-      "hospital_name": "Al Khawaneej Infertility Center of Care",
-      "location": "Al Khawaneej",
-      "hospital_type": ["infertility"],
-      "insurance_providers": ["nas", "prudent"],
-      "rating": 1.2
+    {
+        "instruction": "What is 'co-payment' in insurance?",
+        "context": {
+            "term": "co-payment",
+            "definition": "The percentage of the medical bill that the insured person must pay out-of-pocket."
+        },
+        "response": "The percentage of the medical bill that the insured person must pay out-of-pocket."
     },
-    "response": "Yes, you will require pre-approval from Prudent for any treatment at Al Khawaneej Infertility Center of Care. All infertility treatments require prior authorization from the insurer."
-  },
-  {
-    "instruction": "Which hospitals in Kalba offer direct billing for my Medcare Silver plan?",
-    "context": [
-      {
-        "hospital_id": 16,
-        "hospital_name": "Kalba Cardiothoracic Surgery Medical Plaza",
-        "location": "Kalba",
-        "hospital_type": ["cardiothoracic surgery", "gynecology"],
-        "insurance_providers": ["takaful", "daman", "medcare"],
-        "rating": 5.0
-      },
-      {
-        "hospital_id": 46,
-        "hospital_name": "Kalba Pulmonology & Hepatology Care Hub",
-        "location": "Kalba",
-        "hospital_type": ["pulmonology", "hepatology"],
-        "insurance_providers": ["medcare", "lifecare"],
-        "rating": 3.2
-      }
-    ],
-    "response": "Based on your Medcare Silver plan, Kalba Cardiothoracic Surgery Medical Plaza offers direct billing as its rating is 5.0 (which is above the 4.0 threshold for direct billing on Silver plans). Kalba Pulmonology & Hepatology Care Hub is in-network, but you would likely need to pay and claim for reimbursement as its rating is 3.2."
-  },
-  {
-    "instruction": "My insurance is Bupa. Find me an oncology center.",
-    "context": [
-      {
-        "hospital_id": 4,
-        "hospital_name": "Al Madam Oncology Care Hub",
-        "location": "Al Madam",
-        "hospital_type": ["oncology"],
-        "insurance_providers": ["bupa"],
-        "rating": 3.2
-      }
-    ],
-    "response": "Al Madam Oncology Care Hub, located in Al Madam, is an in-network option for oncology services with Bupa insurance."
-  },
-  {
-    "instruction": "What are the details for Madinat Zayed Cardiology Wellness Center?",
-    "context": {
-      "hospital_id": 5,
-      "hospital_name": "Madinat Zayed Cardiology Wellness Center",
-      "location": "Madinat Zayed",
-      "address": "183 Sheikh Khalifa St, Madinat Zayed",
-      "hospital_type": ["cardiology"],
-      "insurance_providers": ["oman life"],
-      "rating": 4.5
+    {
+        "instruction": "Can I use my Gold Comprehensive plan at Ghayathi Occupational Medicine Center of Care?",
+        "context": {
+            "hospital_name": "Ghayathi Occupational Medicine Center of Care",
+            "insurance_plan_name": "Gold Comprehensive",
+            "insurance_provider_name": "etna",
+            "network_type": "PPO (Preferred Provider Organization)",
+            "hospital_address": "198 Al Bahar St, Ghayathi"
+        },
+        "response": "Yes, Ghayathi Occupational Medicine Center of Care accepts the Gold Comprehensive plan from etna. It is part of their PPO (Preferred Provider Organization) network."
     },
-    "response": "Madinat Zayed Cardiology Wellness Center is a cardiology hospital located at 183 Sheikh Khalifa St, Madinat Zayed. It has a high rating of 4.5 and accepts Oman Life insurance. "
-  },
-  {
-    "instruction": "I have the Allianz Bronze plan and need ENT services. Which hospitals can I visit?",
-    "context": [
-      {
-        "hospital_id": 3,
-        "hospital_name": "Al Hamraniyah Ent Healthcare Center",
-        "location": "Al Hamraniyah",
-        "hospital_type": ["ent", "rheumatology", "vascular surgery"],
-        "insurance_providers": ["allianz"],
-        "rating": 1.4
-      },
-      {
-        "hospital_id": 105,
-        "hospital_name": "Sharjah Geriatrics & Otolaryngology Medical Center",
-        "location": "Sharjah",
-        "hospital_type": ["geriatrics", "otolaryngology", "oncology"],
-        "insurance_providers": ["allianz", "medcare", "al manara"],
-        "rating": 4.6
-      }
-    ],
-    "response": "With your Allianz Bronze plan, you can visit Sharjah Geriatrics & Otolaryngology Medical Center for ENT (Otolaryngology) services, as it is located in Sharjah, a major city covered by basic plans. Al Hamraniyah Ent Healthcare Center would not be covered because Al Hamraniyah is not considered a major city under the Bronze plan network."
-  },
-  {
-    "instruction": "Does any hospital in Fujairah accept Mednet for cosmetic surgery?",
-    "context": {
-      "hospital_id": 17,
-      "hospital_name": "Fujairah Cosmetic Surgery Hospital",
-      "location": "Fujairah",
-      "hospital_type": ["cosmetic surgery"],
-      "insurance_providers": ["mednet", "allianz"],
-      "rating": 2.5
+    {
+        "instruction": "What does Gold Comprehensive by medcare cover?",
+        "context": {
+            "plan_name": "Gold Comprehensive",
+            "provider_name": "medcare",
+            "policy_terms": "Covers 71% of hospitalization costs. No coverage for pre-existing conditions in the first year. Includes maternity benefits after a 9-month waiting period.",
+            "coverage_details": "Basic inpatient hospitalization and surgical coverage. No claim bonus added for claim-free years. Ambulance service covered up to AED $1,901 per claim.",
+            "network_type": "POS (Point of Service)"
+        },
+        "response": "The Gold Comprehensive plan from medcare has the following policy terms: Covers 71% of hospitalization costs. No coverage for pre-existing conditions in the first year. Includes maternity benefits after a 9-month waiting period.. Its coverage details include: Basic inpatient hospitalization and surgical coverage. No claim bonus added for claim-free years. Ambulance service covered up to AED $1,901 per claim.. It operates under a POS (Point of Service) network."
     },
-    "response": "Yes, Fujairah Cosmetic Surgery Hospital in Fujairah accepts Mednet insurance. Please be aware that cosmetic surgery always requires pre-approval from your insurer before you can schedule any procedures."
-  },
-  {
-    "instruction": "I need to find a hospital in Sila that is part of the Adnic network.",
-    "context": {
-      "hospital_id": 25,
-      "hospital_name": "Sila Pulmonology Medical Center",
-      "location": "Sila",
-      "hospital_type": ["pulmonology", "cosmetic surgery"],
-      "insurance_providers": ["adnic"],
-      "rating": 3.9
+    {
+        "instruction": "Is Ras Al Khaimah Gynecology Health Institute in the network for axa?",
+        "context": {
+            "hospital_name": "Ras Al Khaimah Gynecology Health Institute",
+            "insurance_plan_name": "Platinum Plus",
+            "insurance_provider_name": "axa",
+            "network_type": "POS (Point of Service)",
+            "hospital_address": "79 Main St, Ras Al Khaimah"
+        },
+        "response": "Yes, Ras Al Khaimah Gynecology Health Institute accepts the Platinum Plus plan from axa. It is part of their POS (Point of Service) network."
     },
-    "response": "Sila Pulmonology Medical Center, located in Sila, is in the Adnic network."
-  },
-  {
-    "instruction": "Is there direct billing at Sharjah Plastic Surgery Wellness Center with Prudent?",
-    "context": {
-      "hospital_id": 123,
-      "hospital_name": "Sharjah Plastic Surgery Wellness Center",
-      "location": "Sharjah",
-      "hospital_type": ["plastic surgery"],
-      "insurance_providers": ["prudent"],
-      "rating": 4.5
+    {
+        "instruction": "Which insurance plans does Masafi Psychiatry Center of Care accept from etna?",
+        "context": {
+            "hospital_name": "Masafi Psychiatry Center of Care",
+            "insurance_plan_name": "Gold Comprehensive",
+            "insurance_provider_name": "etna",
+            "network_type": "PPO (Preferred Provider Organization)",
+            "hospital_address": "46 Industrial Rd, Masafi"
+        },
+        "response": "Yes, Masafi Psychiatry Center of Care accepts the Gold Comprehensive plan from etna. It is part of their PPO (Preferred Provider Organization) network."
     },
-    "response": "Yes, Sharjah Plastic Surgery Wellness Center supports direct billing for Prudent insurance members. Its rating of 4.5 is above the 4.0 threshold required for direct billing on most plans. Don't forget to get pre-approval for any plastic surgery procedures."
-  },
-  {
-    "instruction": "I have a Metlife Silver plan. Is Mirbah Ent & Internal Medicine Center of Care covered?",
-    "context": {
-      "hospital_id": 128,
-      "hospital_name": "Mirbah Ent & Internal Medicine Center of Care",
-      "location": "Mirbah",
-      "hospital_type": ["ent", "internal medicine", "cardiothoracic surgery"],
-      "insurance_providers": ["metlife", "al safwa", "bupa"],
-      "rating": 4.6
+    {
+        "instruction": "Does Madinat Zayed Sleep Medicine Medical Center accept Corporate Advantage insurance?",
+        "context": {
+            "hospital_name": "Madinat Zayed Sleep Medicine Medical Center",
+            "insurance_plan_name": "Corporate Advantage",
+            "insurance_provider_name": "bupa",
+            "network_type": "EPO (Exclusive Provider Organization)",
+            "hospital_address": "246 Al Dhahir St, Madinat Zayed"
+        },
+        "response": "Yes, Madinat Zayed Sleep Medicine Medical Center accepts the Corporate Advantage plan from bupa. It is part of their EPO (Exclusive Provider Organization) network."
     },
-    "response": "Yes, Mirbah Ent & Internal Medicine Center of Care is covered by your Metlife Silver plan. Its rating of 4.6 is above the 3.5 minimum requirement for Silver tier plans."
-  },
-  {
-    "instruction": "List all hospitals in Dubai that accept Lifecare.",
-    "context": {
-      "hospital_id": 11,
-      "hospital_name": "Dubai Neurology Hospital",
-      "location": "Dubai",
-      "hospital_type": ["neurology", "nephrology", "oncology"],
-      "insurance_providers": ["lifecare"],
-      "rating": 3.3
+    {
+        "instruction": "Explain the EPO (Exclusive Provider Organization) network type under Corporate Advantage.",
+        "context": {
+            "plan_name": "Corporate Advantage",
+            "provider_name": "bupa",
+            "policy_terms": "30-day waiting period for general illnesses. Organ transplant coverage up to AED $160,017. Direct billing available at listed network hospitals.",
+            "coverage_details": "Daycare procedures such as cataract and dialysis included. Domiciliary hospitalization included under special cases.",
+            "network_type": "EPO (Exclusive Provider Organization)"
+        },
+        "response": "The Corporate Advantage plan from bupa has the following policy terms: 30-day waiting period for general illnesses. Organ transplant coverage up to AED $160,017. Direct billing available at listed network hospitals.. Its coverage details include: Daycare procedures such as cataract and dialysis included. Domiciliary hospitalization included under special cases.. It operates under a EPO (Exclusive Provider Organization) network."
     },
-    "response": "The following hospital in Dubai is part of the Lifecare network: Dubai Neurology Hospital."
-  },
-  {
-    "instruction": "My plan is the Aetna Core Network. Can I visit Al Lisaili Infectious Disease & Physical Medicine And Rehabilitation Specialty Clinic?",
-    "context": {
-      "hospital_id": 21,
-      "hospital_name": "Al Lisaili Infectious Disease & Physical Medicine And Rehabilitation Specialty Clinic",
-      "location": "Al Lisaili",
-      "hospital_type": ["infectious disease", "physical medicine and rehabilitation", "dermatologic surgery"],
-      "insurance_providers": ["etna", "allianz", "oman life"],
-      "rating": 1.4
+    {
+        "instruction": "Explain the EPO (Exclusive Provider Organization) network type under Platinum Plus.",
+        "context": {
+            "plan_name": "Platinum Plus",
+            "provider_name": "orient",
+            "policy_terms": "Includes maternity benefits after a 9-month waiting period. Pre-approval required for planned surgeries and major procedures.",
+            "coverage_details": "Domiciliary hospitalization included under special cases. No claim bonus added for claim-free years. Daycare procedures such as cataract and dialysis included.",
+            "network_type": "EPO (Exclusive Provider Organization)"
+        },
+        "response": "The Platinum Plus plan from orient has the following policy terms: Includes maternity benefits after a 9-month waiting period. Pre-approval required for planned surgeries and major procedures.. Its coverage details include: Domiciliary hospitalization included under special cases. No claim bonus added for claim-free years. Daycare procedures such as cataract and dialysis included.. It operates under a EPO (Exclusive Provider Organization) network."
     },
-    "response": "No, you cannot visit Al Lisaili Infectious Disease & Physical Medicine And Rehabilitation Specialty Clinic with an Aetna Core Network (Bronze/Basic) plan. This plan only covers facilities in major cities like Dubai and Abu Dhabi, and Al Lisaili is outside that network."
-  },
-  {
-    "instruction": "Tell me about the insurance providers for Ghalilah Hepatology & Infectious Disease Treatment Facility.",
-    "context": {
-      "hospital_id": 6,
-      "hospital_name": "Ghalilah Hepatology & Infectious Disease Treatment Facility",
-      "location": "Ghalilah",
-      "hospital_type": ["hepatology", "infectious disease", "pediatrics"],
-      "insurance_providers": ["prudent"],
-      "rating": 4.9
+    {
+        "instruction": "Is Falaj Al Mualla Infertility Specialty Clinic in the network for adnic?",
+        "context": {
+            "hospital_name": "Falaj Al Mualla Infertility Specialty Clinic",
+            "insurance_plan_name": "Individual Protector",
+            "insurance_provider_name": "adnic",
+            "network_type": "POS (Point of Service)",
+            "hospital_address": "55 Main St, Falaj Al Mualla"
+        },
+        "response": "Yes, Falaj Al Mualla Infertility Specialty Clinic accepts the Individual Protector plan from adnic. It is part of their POS (Point of Service) network."
     },
-    "response": "Ghalilah Hepatology & Infectious Disease Treatment Facility accepts Prudent insurance."
-  },
-  {
-    "instruction": "I have an Etna Life Silver plan, can I go to Ghayl Pain Management & Anesthesiology Health Institute?",
-    "context": {
-      "hospital_id": 8,
-      "hospital_name": "Ghayl Pain Management & Anesthesiology Health Institute",
-      "location": "Ghayl",
-      "hospital_type": ["pain management", "anesthesiology", "cardiothoracic surgery"],
-      "insurance_providers": ["axa", "etna life"],
-      "rating": 1.1
+    {
+        "instruction": "What are the policy terms for Smart Saver?",
+        "context": {
+            "plan_name": "Smart Saver",
+            "provider_name": "metlife",
+            "policy_terms": "Organ transplant coverage up to AED $112,121. Co-payment of 14% applicable on outpatient visits. Reimbursement applicable for non-network hospitals within 7 working days.",
+            "coverage_details": "Outpatient department (OPD) consultations covered up to AED $12,022 per year. Basic inpatient hospitalization and surgical coverage.",
+            "network_type": "EPO (Exclusive Provider Organization)"
+        },
+        "response": "The Smart Saver plan from metlife has the following policy terms: Organ transplant coverage up to AED $112,121. Co-payment of 14% applicable on outpatient visits. Reimbursement applicable for non-network hospitals within 7 working days.. Its coverage details include: Outpatient department (OPD) consultations covered up to AED $12,022 per year. Basic inpatient hospitalization and surgical coverage.. It operates under a EPO (Exclusive Provider Organization) network."
     },
-    "response": "No, Ghayl Pain Management & Anesthesiology Health Institute is not covered under your Etna Life Silver plan. Silver plans require a hospital rating of 3.5 or higher, and this facility has a rating of 1.1."
-  },
-  {
-    "instruction": "Find a cardiology hospital in Al Ain for my Daman insurance.",
-    "context": [
-      {
-        "hospital_id": 27,
-        "hospital_name": "Al Ain Geriatrics Care Hub",
-        "location": "Al Ain",
-        "hospital_type": ["geriatrics", "critical care", "genetics"],
-        "insurance_providers": ["daman"],
-        "rating": 3.0
-      }
-    ],
-    "response": "I could not find a hospital in Al Ain specifically for cardiology that accepts Daman insurance in the provided list. However, Al Ain Geriatrics Care Hub is in Al Ain and accepts Daman, offering services like critical care, geriatrics, and genetics."
-  },
-  {
-    "instruction": "I'm looking for a hospital with Daman coverage that specializes in gynecology.",
-    "context": {
-        "hospital_id": 16,
-        "hospital_name": "Kalba Cardiothoracic Surgery Medical Plaza",
-        "location": "Kalba",
-        "hospital_type": ["cardiothoracic surgery", "gynecology"],
-        "insurance_providers": ["takaful", "daman", "medcare"],
-        "rating": 5.0
+    {
+        "instruction": "Does Habshan Oncology & Physical Medicine And Rehabilitation Center of Care accept Bronze Basic insurance?",
+        "context": {
+            "hospital_name": "Habshan Oncology & Physical Medicine And Rehabilitation Center of Care",
+            "insurance_plan_name": "Bronze Basic",
+            "insurance_provider_name": "bupa",
+            "network_type": "HMO (Health Maintenance Organization)",
+            "hospital_address": "46 Habshan St, Habshan"
+        },
+        "response": "Yes, Habshan Oncology & Physical Medicine And Rehabilitation Center of Care accepts the Bronze Basic plan from bupa. It is part of their HMO (Health Maintenance Organization) network."
     },
-    "response": "Kalba Cardiothoracic Surgery Medical Plaza in Kalba is in the Daman network and offers gynecology services. With a rating of 5.0, it is covered by all Daman plan tiers."
-  },
-  {
-    "instruction": "Does Habshan Bariatric Surgery & Dermatologic Surgery Health Institute require pre-approval with Cigna?",
-    "context": {
-        "hospital_id": 39,
-        "hospital_name": "Habshan Bariatric Surgery & Dermatologic Surgery Health Institute",
-        "location": "Habshan",
-        "hospital_type": ["bariatric surgery", "dermatologic surgery", "rheumatology"],
-        "insurance_providers": ["etna", "lifecare", "cigna"],
-        "rating": 2.4
+    {
+        "instruction": "What does Platinum Plus by axa cover?",
+        "context": {
+            "plan_name": "Platinum Plus",
+            "provider_name": "axa",
+            "policy_terms": "Covers 95% of hospitalization costs. Cashless facility available for network hospitals. Critical illness protection for up to 10 major conditions.",
+            "coverage_details": "Room rent capped at 2% of the total sum insured. International emergency coverage available within GCC countries. Ambulance service covered up to AED $863 per claim.",
+            "network_type": "POS (Point of Service)"
+        },
+        "response": "The Platinum Plus plan from axa has the following policy terms: Covers 95% of hospitalization costs. Cashless facility available for network hospitals. Critical illness protection for up to 10 major conditions.. Its coverage details include: Room rent capped at 2% of the total sum insured. International emergency coverage available within GCC countries. Ambulance service covered up to AED $863 per claim.. It operates under a POS (Point of Service) network."
     },
-    "response": "Yes, since this facility offers bariatric surgery, you will need to get pre-approval from Cigna before undergoing any bariatric procedures there. This is a standard requirement for this type of specialized surgery."
-  },
-  {
-    "instruction": "I have the Oman Life 'Select Network' plan. Is Sila Radiology Wellness Center covered?",
-    "context": {
-        "hospital_id": 40,
-        "hospital_name": "Sila Radiology Wellness Center",
-        "location": "Sila",
-        "hospital_type": ["radiology"],
-        "insurance_providers": ["oman life", "universal health", "medcare"],
-        "rating": 1.7
+    {
+        "instruction": "Explain the HMO (Health Maintenance Organization) network type under Corporate Advantage.",
+        "context": {
+            "plan_name": "Corporate Advantage",
+            "provider_name": "gulf insurance",
+            "policy_terms": "Sum insured limited to AED $195,450. Includes maternity benefits after a 9-month waiting period. Pre-approval required for planned surgeries and major procedures. Co-payment of 14% applicable on outpatient visits.",
+            "coverage_details": "No claim bonus added for claim-free years. Ambulance service covered up to AED $928 per claim.",
+            "network_type": "HMO (Health Maintenance Organization)"
+        },
+        "response": "The Corporate Advantage plan from gulf insurance has the following policy terms: Sum insured limited to AED $195,450. Includes maternity benefits after a 9-month waiting period. Pre-approval required for planned surgeries and major procedures. Co-payment of 14% applicable on outpatient visits.. Its coverage details include: No claim bonus added for claim-free years. Ambulance service covered up to AED $928 per claim.. It operates under a HMO (Health Maintenance Organization) network."
     },
-    "response": "Assuming your 'Select Network' plan is a Silver tier plan, Sila Radiology Wellness Center would not be covered. Its rating is 1.7, which is below the 3.5 rating threshold required for Silver plans. Please check your policy details or confirm if your plan is Gold/Platinum for coverage."
-  }
+    {
+        "instruction": "Explain 'network hospital'.",
+        "context": {
+            "term": "network hospital",
+            "definition": "A hospital that has an active tie-up with an insurance provider for cashless or direct billing services."
+        },
+        "response": "A hospital that has an active tie-up with an insurance provider for cashless or direct billing services."
+    },
+    {
+        "instruction": "Explain 'policy exclusion'.",
+        "context": {
+            "term": "policy exclusion",
+            "definition": "Specific conditions or treatments not covered under the insurance plan."
+        },
+        "response": "Specific conditions or treatments not covered under the insurance plan."
+    },
+    {
+        "instruction": "Does Lahbab Nephrology & Occupational Medicine Healthcare Center accept Individual Protector insurance?",
+        "context": {
+            "hospital_name": "Lahbab Nephrology & Occupational Medicine Healthcare Center",
+            "insurance_plan_name": "Individual Protector",
+            "insurance_provider_name": "etna",
+            "network_type": "PPO (Preferred Provider Organization)",
+            "hospital_address": "193 Lahbab Rd, Lahbab"
+        },
+        "response": "Yes, Lahbab Nephrology & Occupational Medicine Healthcare Center accepts the Individual Protector plan from etna. It is part of their PPO (Preferred Provider Organization) network."
+    },
+    {
+        "instruction": "Can you define 'reimbursement'?",
+        "context": {
+            "term": "reimbursement",
+            "definition": "The process of refunding expenses when treatment is received outside the insurance network."
+        },
+        "response": "The process of refunding expenses when treatment is received outside the insurance network."
+    },
+    {
+        "instruction": "What does Critical Illness Cover by adnic cover?",
+        "context": {
+            "plan_name": "Critical Illness Cover",
+            "provider_name": "adnic",
+            "policy_terms": "No waiting period for accidental emergencies. Includes maternity benefits after a 9-month waiting period. Critical illness protection for up to 10 major conditions.",
+            "coverage_details": "Ambulance service covered up to AED $1,734 per claim. Outpatient department (OPD) consultations covered up to AED $8,786 per year. Annual preventive health check-up included.",
+            "network_type": "OAN (Open Access Network)"
+        },
+        "response": "The Critical Illness Cover plan from adnic has the following policy terms: No waiting period for accidental emergencies. Includes maternity benefits after a 9-month waiting period. Critical illness protection for up to 10 major conditions.. Its coverage details include: Ambulance service covered up to AED $1,734 per claim. Outpatient department (OPD) consultations covered up to AED $8,786 per year. Annual preventive health check-up included.. It operates under a OAN (Open Access Network) network."
+    },
+    {
+        "instruction": "Tell me about the coverage details of the Silver Select plan from prudent.",
+        "context": {
+            "plan_name": "Silver Select",
+            "provider_name": "prudent",
+            "policy_terms": "Reimbursement applicable for non-network hospitals within 7 working days. Direct billing available at listed network hospitals. 30-day waiting period for general illnesses.",
+            "coverage_details": "Specific disease coverage for conditions like cancer, heart diseases. No claim bonus added for claim-free years. Outpatient department (OPD) consultations covered up to AED $10,428 per year.",
+            "network_type": "POS (Point of Service)"
+        },
+        "response": "The Silver Select plan from prudent has the following policy terms: Reimbursement applicable for non-network hospitals within 7 working days. Direct billing available at listed network hospitals. 30-day waiting period for general illnesses.. Its coverage details include: Specific disease coverage for conditions like cancer, heart diseases. No claim bonus added for claim-free years. Outpatient department (OPD) consultations covered up to AED $10,428 per year.. It operates under a POS (Point of Service) network."
+    },
+    {
+        "instruction": "Tell me about the coverage details of the Gold Comprehensive plan from allianz.",
+        "context": {
+            "plan_name": "Gold Comprehensive",
+            "provider_name": "allianz",
+            "policy_terms": "Sum insured limited to AED $86,680. Cashless facility available for network hospitals.",
+            "coverage_details": "No claim bonus added for claim-free years. Domiciliary hospitalization included under special cases.",
+            "network_type": "OAN (Open Access Network)"
+        },
+        "response": "The Gold Comprehensive plan from allianz has the following policy terms: Sum insured limited to AED $86,680. Cashless facility available for network hospitals.. Its coverage details include: No claim bonus added for claim-free years. Domiciliary hospitalization included under special cases.. It operates under a OAN (Open Access Network) network."
+    },
+    {
+        "instruction": "Does Mleiha Cardiothoracic Surgery Diagnostic Center accept Individual Protector insurance?",
+        "context": {
+            "hospital_name": "Mleiha Cardiothoracic Surgery Diagnostic Center",
+            "insurance_plan_name": "Individual Protector",
+            "insurance_provider_name": "etna",
+            "network_type": "PPO (Preferred Provider Organization)",
+            "hospital_address": "140 Al Falaj St, Mleiha"
+        },
+        "response": "Yes, Mleiha Cardiothoracic Surgery Diagnostic Center accepts the Individual Protector plan from etna. It is part of their PPO (Preferred Provider Organization) network."
+    },
+    {
+        "instruction": "Explain the POS (Point of Service) network type under Silver Select.",
+        "context": {
+            "plan_name": "Silver Select",
+            "provider_name": "prudent",
+            "policy_terms": "Reimbursement applicable for non-network hospitals within 7 working days. Direct billing available at listed network hospitals. 30-day waiting period for general illnesses.",
+            "coverage_details": "Specific disease coverage for conditions like cancer, heart diseases. No claim bonus added for claim-free years. Outpatient department (OPD) consultations covered up to AED $10,428 per year.",
+            "network_type": "POS (Point of Service)"
+        },
+        "response": "The Silver Select plan from prudent has the following policy terms: Reimbursement applicable for non-network hospitals within 7 working days. Direct billing available at listed network hospitals. 30-day waiting period for general illnesses.. Its coverage details include: Specific disease coverage for conditions like cancer, heart diseases. No claim bonus added for claim-free years. Outpatient department (OPD) consultations covered up to AED $10,428 per year.. It operates under a POS (Point of Service) network."
+    },
+    {
+        "instruction": "Is Liwa Urology Treatment Facility in the network for medcare?",
+        "context": {
+            "hospital_name": "Liwa Urology Treatment Facility",
+            "insurance_plan_name": "Family Floater",
+            "insurance_provider_name": "medcare",
+            "network_type": "OAN (Open Access Network)",
+            "hospital_address": "207 Liwa St, Liwa"
+        },
+        "response": "Yes, Liwa Urology Treatment Facility accepts the Family Floater plan from medcare. It is part of their OAN (Open Access Network) network."
+    },
+    {
+        "instruction": "Which insurance plans does Mleiha Gastroenterology & Allergy And Immunology Clinic accept from adnic?",
+        "context": {
+            "hospital_name": "Mleiha Gastroenterology & Allergy And Immunology Clinic",
+            "insurance_plan_name": "Individual Protector",
+            "insurance_provider_name": "adnic",
+            "network_type": "POS (Point of Service)",
+            "hospital_address": "216 Al Falaj St, Mleiha"
+        },
+        "response": "Yes, Mleiha Gastroenterology & Allergy And Immunology Clinic accepts the Individual Protector plan from adnic. It is part of their POS (Point of Service) network."
+    },
+    {
+        "instruction": "What does Gold Comprehensive by allianz cover?",
+        "context": {
+            "plan_name": "Gold Comprehensive",
+            "provider_name": "allianz",
+            "policy_terms": "Sum insured limited to AED $86,680. Cashless facility available for network hospitals.",
+            "coverage_details": "No claim bonus added for claim-free years. Domiciliary hospitalization included under special cases.",
+            "network_type": "OAN (Open Access Network)"
+        },
+        "response": "The Gold Comprehensive plan from allianz has the following policy terms: Sum insured limited to AED $86,680. Cashless facility available for network hospitals.. Its coverage details include: No claim bonus added for claim-free years. Domiciliary hospitalization included under special cases.. It operates under a OAN (Open Access Network) network."
+    },
+    {
+        "instruction": "Tell me about the coverage details of the Individual Protector plan from adnic.",
+        "context": {
+            "plan_name": "Individual Protector",
+            "provider_name": "adnic",
+            "policy_terms": "30-day waiting period for general illnesses. Pre-approval required for planned surgeries and major procedures.",
+            "coverage_details": "International emergency coverage available within GCC countries. Annual preventive health check-up included. Ambulance service covered up to AED $800 per claim.",
+            "network_type": "POS (Point of Service)"
+        },
+        "response": "The Individual Protector plan from adnic has the following policy terms: 30-day waiting period for general illnesses. Pre-approval required for planned surgeries and major procedures.. Its coverage details include: International emergency coverage available within GCC countries. Annual preventive health check-up included. Ambulance service covered up to AED $800 per claim.. It operates under a POS (Point of Service) network."
+    },
+    {
+        "instruction": "Explain 'pre-approval required'.",
+        "context": {
+            "term": "pre-approval required",
+            "definition": "Authorization from the insurer is needed before certain treatments or hospital admissions."
+        },
+        "response": "Authorization from the insurer is needed before certain treatments or hospital admissions."
+    },
+    {
+        "instruction": "Can I use my Individual Protector plan at Ghayl Bariatric Surgery Diagnostic Center?",
+        "context": {
+            "hospital_name": "Ghayl Bariatric Surgery Diagnostic Center",
+            "insurance_plan_name": "Individual Protector",
+            "insurance_provider_name": "adnic",
+            "network_type": "POS (Point of Service)",
+            "hospital_address": "122 Residential St, Ghayl"
+        },
+        "response": "Yes, Ghayl Bariatric Surgery Diagnostic Center accepts the Individual Protector plan from adnic. It is part of their POS (Point of Service) network."
+    },
+    {
+        "instruction": "What is 'waiting period' in insurance?",
+        "context": {
+            "term": "waiting period",
+            "definition": "A defined duration during which no claims are admissible for specific conditions."
+        },
+        "response": "A defined duration during which no claims are admissible for specific conditions."
+    },
+    {
+        "instruction": "What is 'sum insured' in insurance?",
+        "context": {
+            "term": "sum insured",
+            "definition": "The maximum coverage amount payable by the insurer per policy year."
+        },
+        "response": "The maximum coverage amount payable by the insurer per policy year."
+    },
+    {
+        "instruction": "Is Al Rashidya Nephrology Healthcare Center in the network for prudent?",
+        "context": {
+            "hospital_name": "Al Rashidya Nephrology Healthcare Center",
+            "insurance_plan_name": "Silver Select",
+            "insurance_provider_name": "prudent",
+            "network_type": "POS (Point of Service)",
+            "hospital_address": "32 Airport Rd, Al Rashidya"
+        },
+        "response": "Yes, Al Rashidya Nephrology Healthcare Center accepts the Silver Select plan from prudent. It is part of their POS (Point of Service) network."
+    },
+    {
+        "instruction": "Does Madinat Zayed Neonatology & Palliative Care Specialty Clinic accept Individual Protector insurance?",
+        "context": {
+            "hospital_name": "Madinat Zayed Neonatology & Palliative Care Specialty Clinic",
+            "insurance_plan_name": "Individual Protector",
+            "insurance_provider_name": "takaful",
+            "network_type": "EPO (Exclusive Provider Organization)",
+            "hospital_address": "91 Zayed St, Madinat Zayed"
+        },
+        "response": "Yes, Madinat Zayed Neonatology & Palliative Care Specialty Clinic accepts the Individual Protector plan from takaful. It is part of their EPO (Exclusive Provider Organization) network."
+    },
+    {
+        "instruction": "Which insurance plans does Sharjah Neonatology Diagnostic Center accept from gulf insurance?",
+        "context": {
+            "hospital_name": "Sharjah Neonatology Diagnostic Center",
+            "insurance_plan_name": "Corporate Advantage",
+            "insurance_provider_name": "gulf insurance",
+            "network_type": "HMO (Health Maintenance Organization)",
+            "hospital_address": "13 King Faisal Rd, Sharjah"
+        },
+        "response": "Yes, Sharjah Neonatology Diagnostic Center accepts the Corporate Advantage plan from gulf insurance. It is part of their HMO (Health Maintenance Organization) network."
+    },
+    {
+        "instruction": "Explain 'cashless facility'.",
+        "context": {
+            "term": "cashless facility",
+            "definition": "A feature where the insured receives treatment at a network hospital without paying upfront."
+        },
+        "response": "A feature where the insured receives treatment at a network hospital without paying upfront."
+    },
+    {
+        "instruction": "What does 'direct billing' mean?",
+        "context": {
+            "term": "direct billing",
+            "definition": "When the hospital directly settles the claim with the insurance provider without patient payment."
+        },
+        "response": "When the hospital directly settles the claim with the insurance provider without patient payment."
+    },
+    {
+        "instruction": "Tell me about the coverage details of the Corporate Advantage plan from orient.",
+        "context": {
+            "plan_name": "Corporate Advantage",
+            "provider_name": "orient",
+            "policy_terms": "Cashless facility available for network hospitals. No waiting period for accidental emergencies.",
+            "coverage_details": "No claim bonus added for claim-free years. Room rent capped at 1% of the total sum insured. Domiciliary hospitalization included under special cases.",
+            "network_type": "HMO (Health Maintenance Organization)"
+        },
+        "response": "The Corporate Advantage plan from orient has the following policy terms: Cashless facility available for network hospitals. No waiting period for accidental emergencies.. Its coverage details include: No claim bonus added for claim-free years. Room rent capped at 1% of the total sum insured. Domiciliary hospitalization included under special cases.. It operates under a HMO (Health Maintenance Organization) network."
+    },
+    {
+        "instruction": "Is Al Rashidya Maternity Healthcare Center in the network for takaful?",
+        "context": {
+            "hospital_name": "Al Rashidya Maternity Healthcare Center",
+            "insurance_plan_name": "Individual Protector",
+            "insurance_provider_name": "takaful",
+            "network_type": "EPO (Exclusive Provider Organization)",
+            "hospital_address": "139 Airport Rd, Al Rashidya"
+        },
+        "response": "Yes, Al Rashidya Maternity Healthcare Center accepts the Individual Protector plan from takaful. It is part of their EPO (Exclusive Provider Organization) network."
+    },
+    {
+        "instruction": "What does Gold Comprehensive by etna cover?",
+        "context": {
+            "plan_name": "Gold Comprehensive",
+            "provider_name": "etna",
+            "policy_terms": "30-day waiting period for general illnesses. Direct billing available at listed network hospitals.",
+            "coverage_details": "No claim bonus added for claim-free years. Specific disease coverage for conditions like cancer, heart diseases. International emergency coverage available within GCC countries.",
+            "network_type": "PPO (Preferred Provider Organization)"
+        },
+        "response": "The Gold Comprehensive plan from etna has the following policy terms: 30-day waiting period for general illnesses. Direct billing available at listed network hospitals.. Its coverage details include: No claim bonus added for claim-free years. Specific disease coverage for conditions like cancer, heart diseases. International emergency coverage available within GCC countries.. It operates under a PPO (Preferred Provider Organization) network."
+    },
+    {
+        "instruction": "Does Mleiha Pulmonology Treatment Facility accept Corporate Advantage insurance?",
+        "context": {
+            "hospital_name": "Mleiha Pulmonology Treatment Facility",
+            "insurance_plan_name": "Corporate Advantage",
+            "insurance_provider_name": "gulf insurance",
+            "network_type": "HMO (Health Maintenance Organization)",
+            "hospital_address": "166 Desert Rd, Mleiha"
+        },
+        "response": "Yes, Mleiha Pulmonology Treatment Facility accepts the Corporate Advantage plan from gulf insurance. It is part of their HMO (Health Maintenance Organization) network."
+    },
+    {
+        "instruction": "Does Umm Al Quwain Urology Treatment Facility accept Gold Comprehensive insurance?",
+        "context": {
+            "hospital_name": "Umm Al Quwain Urology Treatment Facility",
+            "insurance_plan_name": "Gold Comprehensive",
+            "insurance_provider_name": "medcare",
+            "network_type": "POS (Point of Service)",
+            "hospital_address": "182 Al Sayegh Rd, Umm Al Quwain"
+        },
+        "response": "Yes, Umm Al Quwain Urology Treatment Facility accepts the Gold Comprehensive plan from medcare. It is part of their POS (Point of Service) network."
+    },
+    {
+        "instruction": "Explain the EPO (Exclusive Provider Organization) network type under Corporate Advantage.",
+        "context": {
+            "plan_name": "Corporate Advantage",
+            "provider_name": "bupa",
+            "policy_terms": "30-day waiting period for general illnesses. Organ transplant coverage up to AED $160,017. Direct billing available at listed network hospitals.",
+            "coverage_details": "Daycare procedures such as cataract and dialysis included. Domiciliary hospitalization included under special cases.",
+            "network_type": "EPO (Exclusive Provider Organization)"
+        },
+        "response": "The Corporate Advantage plan from bupa has the following policy terms: 30-day waiting period for general illnesses. Organ transplant coverage up to AED $160,017. Direct billing available at listed network hospitals.. Its coverage details include: Daycare procedures such as cataract and dialysis included. Domiciliary hospitalization included under special cases.. It operates under a EPO (Exclusive Provider Organization) network."
+    },
+    {
+        "instruction": "Does Ras Al Khaimah Pulmonology Clinic accept Individual Protector insurance?",
+        "context": {
+            "hospital_name": "Ras Al Khaimah Pulmonology Clinic",
+            "insurance_plan_name": "Individual Protector",
+            "insurance_provider_name": "adnic",
+            "network_type": "POS (Point of Service)",
+            "hospital_address": "163 Corniche Rd, Ras Al Khaimah"
+        },
+        "response": "Yes, Ras Al Khaimah Pulmonology Clinic accepts the Individual Protector plan from adnic. It is part of their POS (Point of Service) network."
+    },
+    {
+        "instruction": "Does Ras Al Khaimah Pulmonology Clinic accept Individual Protector insurance?",
+        "context": {
+            "hospital_name": "Ras Al Khaimah Pulmonology Clinic",
+            "insurance_plan_name": "Individual Protector",
+            "insurance_provider_name": "adnic",
+            "network_type": "POS (Point of Service)",
+            "hospital_address": "163 Corniche Rd, Ras Al Khaimah"
+        },
+        "response": "Yes, Ras Al Khaimah Pulmonology Clinic accepts the Individual Protector plan from adnic. It is part of their POS (Point of Service) network."
+    },
+    {
+        "instruction": "Explain the EPO (Exclusive Provider Organization) network type under Silver Select.",
+        "context": {
+            "plan_name": "Silver Select",
+            "provider_name": "shield",
+            "policy_terms": "Pre-approval required for planned surgeries and major procedures. No coverage for pre-existing conditions in the first year.",
+            "coverage_details": "International emergency coverage available within GCC countries. Ambulance service covered up to AED $776 per claim. Outpatient department (OPD) consultations covered up to AED $17,161 per year.",
+            "network_type": "EPO (Exclusive Provider Organization)"
+        },
+        "response": "The Silver Select plan from shield has the following policy terms: Pre-approval required for planned surgeries and major procedures. No coverage for pre-existing conditions in the first year.. Its coverage details include: International emergency coverage available within GCC countries. Ambulance service covered up to AED $776 per claim. Outpatient department (OPD) consultations covered up to AED $17,161 per year.. It operates under a EPO (Exclusive Provider Organization) network."
+    },
+    {
+        "instruction": "Explain 'gold plan network'.",
+        "context": {
+            "term": "gold plan network",
+            "definition": "A premium network of hospitals offering wider benefits under the Gold insurance tier."
+        },
+        "response": "A premium network of hospitals offering wider benefits under the Gold insurance tier."
+    },
+    {
+        "instruction": "What does Family Floater by al safwa cover?",
+        "context": {
+            "plan_name": "Family Floater",
+            "provider_name": "al safwa",
+            "policy_terms": "Includes maternity benefits after a 9-month waiting period. No coverage for pre-existing conditions in the first year. Covers 97% of hospitalization costs.",
+            "coverage_details": "Specific disease coverage for conditions like stroke, paralysis. Domiciliary hospitalization included under special cases. Ambulance service covered up to AED $891 per claim.",
+            "network_type": "PPO (Preferred Provider Organization)"
+        },
+        "response": "The Family Floater plan from al safwa has the following policy terms: Includes maternity benefits after a 9-month waiting period. No coverage for pre-existing conditions in the first year. Covers 97% of hospitalization costs.. Its coverage details include: Specific disease coverage for conditions like stroke, paralysis. Domiciliary hospitalization included under special cases. Ambulance service covered up to AED $891 per claim.. It operates under a PPO (Preferred Provider Organization) network."
+    },
+    {
+        "instruction": "What does Corporate Advantage by gulf insurance cover?",
+        "context": {
+            "plan_name": "Corporate Advantage",
+            "provider_name": "gulf insurance",
+            "policy_terms": "Sum insured limited to AED $195,450. Includes maternity benefits after a 9-month waiting period. Pre-approval required for planned surgeries and major procedures. Co-payment of 14% applicable on outpatient visits.",
+            "coverage_details": "No claim bonus added for claim-free years. Ambulance service covered up to AED $928 per claim.",
+            "network_type": "HMO (Health Maintenance Organization)"
+        },
+        "response": "The Corporate Advantage plan from gulf insurance has the following policy terms: Sum insured limited to AED $195,450. Includes maternity benefits after a 9-month waiting period. Pre-approval required for planned surgeries and major procedures. Co-payment of 14% applicable on outpatient visits.. Its coverage details include: No claim bonus added for claim-free years. Ambulance service covered up to AED $928 per claim.. It operates under a HMO (Health Maintenance Organization) network."
+    }
 ]
