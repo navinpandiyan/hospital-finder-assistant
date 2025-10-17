@@ -4,8 +4,7 @@
 # and optionally fine-tunes the LLM on the hospital data.
 
 import os
-from typing import Set
-from pony.orm import Database, Required, db_session, count, select
+from pony.orm import Database, Required, db_session, count, select, Set
 from settings.config import (
     HOSPITAL_DB_FILE_NAME,
     HOSPITAL_DB_FOLDER,
@@ -47,7 +46,7 @@ class Hospital(db.Entity):
     address = Required(str)
     hospital_type = Required(str)
     rating = Required(float)
-    insurance_plans = Set('HospitalInsurancePlan') # New: Many-to-many relationship
+    insurance_plans_link = Set('HospitalInsurancePlan') # New: Many-to-many relationship
 
 class InsurancePlan(db.Entity):
     plan_id = Required(int, unique=True)
@@ -56,6 +55,7 @@ class InsurancePlan(db.Entity):
     policy_terms = Required(str) # Text field for detailed policy terms
     coverage_details = Required(str) # Text field for coverage specifics
     network_type = Required(str) # e.g., PPO, HMO, Exclusive
+    rating = Required(float, default=0.0) # Added: rating field with default
     hospitals = Set('HospitalInsurancePlan') # New: Many-to-many relationship
 
 class HospitalInsurancePlan(db.Entity):
@@ -97,7 +97,6 @@ with db_session:
         LOGGER.info("Insurance Plan database empty. Generating synthetic insurance data...")
         # 1️⃣ Generate insurance plan records
         insurance_plans_data = generate_insurance_plans(num_plans=20)
-
         # 2️⃣ Populate SQLite DB with Insurance Plans
         for plan_data in insurance_plans_data:
             InsurancePlan(
@@ -106,13 +105,14 @@ with db_session:
                 provider_name=plan_data["provider_name"],
                 policy_terms=plan_data["policy_terms"],
                 coverage_details=plan_data["coverage_details"],
-                network_type=plan_data["network_type"]
+                network_type=plan_data["network_type"],
+                rating=plan_data["rating"] # Added rating to insurance plan data
             )
         LOGGER.info(f"{len(insurance_plans_data)} synthetic insurance plans generated.")
 
         # 3️⃣ Link hospitals to insurance plans
-        hospitals = select(h for h in Hospital)[:]
-        insurance_plans = select(ip for ip in InsurancePlan)[:]
+        hospitals = list(select(h for h in Hospital)) # Convert to list
+        insurance_plans = list(select(ip for ip in InsurancePlan)) # Convert to list
 
         for hospital in hospitals:
             # Randomly assign a few insurance plans to each hospital
@@ -140,7 +140,7 @@ with db_session:
                 "longitude": h.longitude,
                 "address": h.address,
                 "hospital_type": h.hospital_type.split(","),
-                "insurance_providers": [ip.insurance_plan.provider_name for ip in h.insurance_plans], # Updated to get from new relation
+                "insurance_providers": [link.insurance_plan.provider_name for link in h.insurance_plans_link], # Updated to get from new relation
                 "rating": h.rating
             }
             for h in select(h for h in Hospital)
@@ -154,8 +154,36 @@ with db_session:
     # Generate fine-tuning data if not exists
     # -----------------------------
     if not os.path.exists(FINE_TUNE_DATA_PATH):
+        hospital_records = [
+            {
+                "hospital_id": h.hospital_id,
+                "hospital_name": h.hospital_name,
+                "location": h.location,
+                "latitude": h.latitude,
+                "longitude": h.longitude,
+                "address": h.address,
+                "hospital_type": h.hospital_type.split(","),
+                "insurance_providers": [link.insurance_plan.provider_name for link in h.insurance_plans_link], # Updated to get from new relation
+                "rating": h.rating
+            }
+            for h in select(h for h in Hospital)
+        ]
+        
+        insurance_plans = [
+            {
+                "plan_id": i.plan_id,
+                "plan_name": i.plan_name,
+                "provider_name": i.provider_name,
+                "policy_terms": i.policy_terms,
+                "coverage_details": i.coverage_details,
+                "network_type": i.network_type,
+                "rating": i.rating
+            }
+            for i in select(i for i in InsurancePlan)
+        ]
+        
         LOGGER.info("Fine-tuning data not found. Generating fine-tuning data...")
-        generate_fine_tuning_data()
+        generate_fine_tuning_data(hospital_records, insurance_plans)
     else:
         LOGGER.info(f"Fine-tuning data already exists at {FINE_TUNE_DATA_PATH}")
 
