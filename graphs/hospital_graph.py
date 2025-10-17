@@ -7,11 +7,6 @@ from utils.utils import play_audio, record_audio, save_state, summarize_conversa
 
 graph = StateGraph(HospitalFinderState)
 
-EXIT_KEYWORDS = [
-    "no", "nope", "stop", "exit", "quit", "end", 
-    "that's all", "done", "nothing", "bye", "goodbye"
-]
-
 # ----------------------------
 # Node 1: Record → Transcribe → Recognize
 # ----------------------------
@@ -32,11 +27,6 @@ async def record_transcribe_recognize(state: HospitalFinderState):
     })
     transcription_text = transcription_result.get("transcribed_text", "").lower()
 
-    # --- Check for exit words ---
-    if any(word in transcription_text for word in EXIT_KEYWORDS):
-        state.user_wants_exit = True  # Flag to let conditional edge handle END
-        return state
-
     # --- Recognize query ---
     recognition_result = await recognize_query_tool.ainvoke({
         "query_text": transcription_text,
@@ -44,6 +34,11 @@ async def record_transcribe_recognize(state: HospitalFinderState):
         "use_llm": USE_LLM_FOR_RECOGNITION
     })
 
+    # --- Check for exit ---
+    if recognition_result["intent"].lower() == "exit":
+        state.user_wants_exit = True  # Flag to let conditional edge handle END
+        return state
+    
     # Assign or merge fields
     if is_clarify_turn:
         state.clarify_user_response_audio_path = audio_path
@@ -80,8 +75,9 @@ graph.add_node("record_transcribe_recognize", record_transcribe_recognize)
 # Node 2: Clarifier (ask for missing location)
 # ----------------------------
 async def clarifier(state: HospitalFinderState):
+    intent = (state.recognition or {}).get("intent")
     location = (state.recognition or {}).get("location")
-    if location:
+    if (location and intent in ["find_nearest", "find_best"]) or (intent not in ["find_nearest", "find_best"]):
         return state  # location already found
 
     if state.turn_count >= MAX_TURNS:
@@ -126,7 +122,7 @@ async def find_hospitals(state: HospitalFinderState):
         return state
 
     user_loc = state.recognition["location"]
-    user_query = state.recognition["query"]
+    user_query = state.recognition["output_query"]
     user_lat, user_lon = state.recognition["location_coordinates"]
     n_hospitals = state.recognition.get("n_hospitals", DEFAULT_N_HOSPITALS_TO_RETURN)
     if not n_hospitals or n_hospitals <= 0:
@@ -162,6 +158,7 @@ async def find_hospitals(state: HospitalFinderState):
             "user_lon": user_lon,
             "intent": state.recognition.get("intent", "find_nearest"),
             "hospital_types": state.recognition.get("hospital_type"),
+            "hospital_names": state.recognition.get("hospital_names"),
             "insurance_providers": state.recognition.get("insurance"),
             "n_hospitals": n_hospitals,
             "distance_km_radius": distance_km,
