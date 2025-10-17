@@ -103,7 +103,7 @@ class HospitalRAGRetriever:
     # -----------------------------
     # Retrieval
     # -----------------------------
-    def retrieve(self, user_input: Dict, extra_results: int = 5) -> List[Dict]:
+    def retrieve(self, user_input: Dict, extra_results: int = 2) -> List[Dict]:
         if not self.vector_db:
             raise RuntimeError("❌ Vector DB not loaded.")
         n_hospitals = user_input.get("n_hospitals", 5)
@@ -111,16 +111,18 @@ class HospitalRAGRetriever:
         user_lon = user_input["user_lon"]
         max_distance = user_input.get("distance_km_radius", 300)
         intent = user_input.get("intent", "find_nearest")
+        user_hospitals = user_input.get("hospital_names", [])
+        user_insurances = user_input.get("insurance_providers", [])
 
         if intent in ["find_nearest", "find_best"] and user_input.get("user_loc", ""):
             query_text = self._build_query(user_input)
             k = int(n_hospitals + extra_results)
         else:
-            if not user_input.get("hospital_names", []) and len(set(user_input.get("insurance_providers", [])).intersection(INSURANCE_PROVIDERS)) < 1:
+            if not user_hospitals and len(set(user_insurances).intersection(INSURANCE_PROVIDERS)) < 1:
                 LOGGER.info("No RAG as No Hospital Names & Insurance Providers mentioned")
                 return []
             query_text = user_input.get("user_query")
-            k = 3
+            k = max(1, len(user_hospitals) + len(user_insurances))
         
         top_docs = self.vector_db.similarity_search(query_text, k=k)
 
@@ -154,31 +156,30 @@ class HospitalRAGRetriever:
                 f"Rating: {h.get('rating', 'N/A')}"
                 for h in hospitals_context
             ])
-            context_section = f"\n\nHospital Data:\n{hospital_data}"
+            context_section = f"\n\n### Context:\n{hospital_data}"
         else:
             context_section = ""
 
         prompt = (
-            "You are an expert healthcare assistant.\n"
-            "Use the available data, and your knowledge into insurance plans and policies to accurately answer the user’s query.\n\n"
-            f"User Query:\n{user_query.strip()}"
+            f"### Instruction:\n{user_query.strip()}\n"
             f"{context_section}\n\n"
-            "Answer:"
+            "### Response:"
         )
         
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
         with torch.no_grad():
             output_ids = self.model.generate(
                 **inputs,
-                max_new_tokens=256,         # still limits new tokens
-                max_length=len(prompt)+256,
+                max_new_tokens=128,         # still limits new tokens
+                max_length=len(prompt)+128,
                 do_sample=True,
                 temperature=0.1,
                 top_p=0.9,
                 eos_token_id=self.tokenizer.eos_token_id
             )
         response_text = self.tokenizer.decode(output_ids[0], skip_special_tokens=True)
-        return response_text
+        response = response_text.split("Response:")[-1].split("\n\n")[0].strip()
+        return response
     
     # -----------------------------
     # Standard LLM grounding
@@ -223,7 +224,7 @@ class HospitalRAGRetriever:
         
         else:
             response = await self.ground_with_insurance_info_qlora(user_input.get("user_query", ""), retrieved_hospitals)
-            result = RAGGroundedResponseModel(hospital_ids=[h['hospital_id'] for h in retrieved_hospitals], dialogue=response.split("Answer:")[-1].split("\n\n")[0].strip())
+            result = RAGGroundedResponseModel(hospital_ids=[h['hospital_id'] for h in retrieved_hospitals], dialogue=response)
             return result
 
     
