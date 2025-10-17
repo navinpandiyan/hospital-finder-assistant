@@ -171,7 +171,6 @@ class HospitalRAGRetriever:
             output_ids = self.model.generate(
                 **inputs,
                 max_new_tokens=128,         # still limits new tokens
-                max_length=len(prompt)+128,
                 do_sample=True,
                 temperature=0.1,
                 top_p=0.9,
@@ -234,6 +233,7 @@ class HospitalRAGRetriever:
 # RAG wrapper
 # -----------------------------
 async def rag_search_wrapper(
+    retriever: HospitalRAGRetriever, # Accept pre-initialized retriever
     user_query: Optional[str] = None,
     user_loc: Optional[str] = None,
     user_lat: Optional[float] = None,
@@ -246,8 +246,7 @@ async def rag_search_wrapper(
     distance_km_radius: float = 300,
     extra_results: int = 5,
 ) -> Tuple[List[dict], str]:
-    retriever = HospitalRAGRetriever()
-
+    
     user_input = {
         "user_query": user_query,
         "user_loc": user_loc,
