@@ -3,6 +3,7 @@ import pyaudio
 import asyncio
 import wave
 import os
+import audioop # Import for audio processing
 from settings.config import LOGGER
 from db.models import HospitalFinderState
 from geopy.geocoders import Nominatim
@@ -39,16 +40,29 @@ if coordinates:
 else:
     LOGGER.debug(f"Could not find coordinates for '{location_to_find}'.")
 
-async def record_audio(output_filename="input_audio.wav", duration=7, rate=44100, chunk=1024, channels=1):
+
+async def record_audio(
+    output_filename="input_audio.wav",
+    duration=30,  # Max recording duration in seconds
+    rate=44100,
+    chunk=1024,
+    channels=1,
+    silence_threshold=100,  # RMS energy below this is considered silence
+    silence_duration=3.0,  # Seconds of silence to trigger stop
+):
     """
     Records audio from the microphone and saves it to a WAV file.
+    Recording stops if silence is detected for `silence_duration` seconds
+    or after `duration` seconds (max duration).
 
     Args:
         output_filename (str): The name of the output WAV file.
-        duration (int): The duration of the recording in seconds.
+        duration (int): The maximum duration of the recording in seconds.
         rate (int): The sample rate (samples per second).
         chunk (int): The number of frames per buffer.
         channels (int): The number of audio channels (1 for mono, 2 for stereo).
+        silence_threshold (int): RMS energy below this value is considered silence.
+        silence_duration (float): Number of seconds of consecutive silence to stop recording.
     """
     p = pyaudio.PyAudio()
 
@@ -58,12 +72,34 @@ async def record_audio(output_filename="input_audio.wav", duration=7, rate=44100
                     input=True,
                     frames_per_buffer=chunk)
 
-    LOGGER.info("🎙️ Please speak your query now. Recording for 7 seconds...")
+    LOGGER.info("🎙️ Please speak your query now. Recording will stop on silence or after max duration...")
 
     frames = []
-    for _ in range(0, int(rate / chunk * duration)):
-        data = stream.read(chunk)
+    silent_chunks = 0
+    # Calculate how many chunks constitute the silence duration
+    max_silent_chunks = int(rate / chunk * silence_duration)
+    # Calculate total chunks for max duration
+    max_total_chunks = int(rate / chunk * duration)
+
+    for i in range(0, max_total_chunks):
+        try:
+            data = stream.read(chunk, exception_on_overflow=False)
+        except IOError as e:
+            LOGGER.warning(f"Audio buffer overflow: {e}")
+            continue # Continue recording, maybe some data was lost
+
         frames.append(data)
+        
+        # Calculate RMS for silence detection
+        rms = audioop.rms(data, 2)  # data is 16-bit samples, so width is 2 bytes
+
+        if rms < silence_threshold:
+            silent_chunks += 1
+            if silent_chunks > max_silent_chunks:
+                LOGGER.info(f"Silence detected for ~{silence_duration} seconds. Stopping recording.")
+                break  # Silence detected, stop recording
+        else:
+            silent_chunks = 0  # Reset silent chunks counter if sound is detected
 
     LOGGER.debug("Recording finished.")
 

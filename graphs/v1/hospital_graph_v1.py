@@ -11,7 +11,7 @@ graph = StateGraph(HospitalFinderState)
 # ----------------------------
 async def run_transcriber(state: HospitalFinderState):
     LOGGER.info("Please speak your query now (e.g., 'Find me a cardiology hospital in Dubai'). Recording for 5 seconds...")
-    initial_audio_path = record_audio(output_filename=f"audios/input/{state.uid}.wav", duration=5)
+    initial_audio_path = record_audio(output_filename=f"audios/input/{state.uid}.wav")
     state.input_audio_path = initial_audio_path
     LOGGER.info(f"Transcribing initial audio from: {state.input_audio_path}")
     transcription_result = await transcribe_audio_tool.ainvoke({
@@ -67,7 +67,7 @@ graph.add_node("ask_for_location", ask_for_location)
 # ----------------------------
 async def re_transcribe_user_response(state: HospitalFinderState):
     LOGGER.info(f"Please respond to the bot's question. Recording for 5 seconds...")
-    clarify_user_response_audio_path = record_audio(output_filename=f"audios/input/clarify_{state.uid}.wav", duration=5)
+    clarify_user_response_audio_path = record_audio(output_filename=f"audios/input/clarify_{state.uid}.wav")
     state.clarify_user_response_audio_path = clarify_user_response_audio_path
     
     if not state.clarify_user_response_audio_path:

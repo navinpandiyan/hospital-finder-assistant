@@ -10,13 +10,12 @@ import os
 from settings.config import LOGGER
 from utils.utils import record_audio
 
-async def record_audio_wrapper(uid: str, duration: int = 5) -> dict:
+async def record_audio_wrapper(uid: str) -> dict:
     """
-    Asynchronously records user voice and saves it as a WAV file.
+    Asynchronously records user voice and saves it as a WAV file. Recording stops on silence.
 
     Args:
         uid (str): Unique session identifier for tracking.
-        duration (int, optional): Duration of recording in seconds. Defaults to 5.
 
     Returns:
         dict: {
@@ -29,10 +28,11 @@ async def record_audio_wrapper(uid: str, duration: int = 5) -> dict:
         os.makedirs("audios/input", exist_ok=True)
         audio_path = f"audios/input/{uid}.wav"
 
-        LOGGER.info(f"🎙️ Recording user query for {duration} seconds...")
+        # The record_audio function now handles duration and silence detection internally
+        LOGGER.info(f"🎙️ Recording user query until silence is detected or max duration is reached...")
 
         # Run the blocking I/O in a thread-safe async way
-        await asyncio.to_thread(record_audio, audio_path, duration)
+        await asyncio.to_thread(record_audio, audio_path)
 
         LOGGER.info(f"✅ Audio recording complete: {audio_path}")
 
