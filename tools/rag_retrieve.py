@@ -255,7 +255,6 @@ async def rag_search_wrapper(
 
     retrieved = retriever.retrieve(user_input, extra_results=extra_results)
     grounded = await retriever.ground_results(user_input, retrieved)
-    breakpoint()
     id_to_hospital = {h["hospital_id"]: h for h in retrieved}
     selected_hospitals = [id_to_hospital[h_id] for h_id in grounded.hospital_ids if h_id in id_to_hospital]
     return selected_hospitals, grounded.dialogue
