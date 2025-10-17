@@ -188,7 +188,6 @@ with db_session:
         all_insurance_plans = list(select(ip for ip in InsurancePlan))
         all_hospital_insurance_plans = list(select(hip for hip in HospitalInsurancePlan))
 
-        LOGGER.info("Fine-tuning data not found. Generating fine-tuning data...")
         generate_fine_tuning_data(all_hospitals, all_insurance_plans, all_hospital_insurance_plans)
     else:
         LOGGER.info(f"Fine-tuning data already exists at {FINE_TUNE_DATA_PATH}")
