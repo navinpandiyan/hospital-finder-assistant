@@ -45,6 +45,14 @@ async def hospital_lookup_tool(
     from tools.hospital_lookup import hospital_lookup_wrapper
     return await hospital_lookup_wrapper(user_lat, user_lon, intent, hospital_types, insurance_providers, n_hospitals, distance_km_radius)
 
+from tools.rag_retrieve import HospitalRAGRetriever
+
+rag_retriever_instance: Optional[HospitalRAGRetriever] = None
+
+def set_rag_retriever_instance(instance: HospitalRAGRetriever):
+    global rag_retriever_instance
+    rag_retriever_instance = instance
+
 @tool
 async def hospital_lookup_rag_tool(
     intent: str,  # find_nearest, find_best, find_all_in_radius
@@ -104,4 +112,10 @@ async def hospital_lookup_rag_tool(
     to provide both structured hospital data and a user-friendly recommendation dialogue.
     """
     from tools.rag_retrieve import rag_search_wrapper
-    return await rag_search_wrapper(user_query, user_loc, user_lat, user_lon, intent, hospital_types, hospital_names, insurance_providers, n_hospitals, distance_km_radius, extra_results)
+    if rag_retriever_instance is None:
+        raise RuntimeError("HospitalRAGRetriever instance not initialized. Call set_rag_retriever_instance first.")
+    return await rag_search_wrapper(
+        rag_retriever_instance,
+        user_query, user_loc, user_lat, user_lon, intent, hospital_types,
+        hospital_names, insurance_providers, n_hospitals, distance_km_radius, extra_results
+    )
