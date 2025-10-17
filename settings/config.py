@@ -141,7 +141,7 @@ DEFAULT_DISTANCE_KM = 300
 LOOKUP_MODE = "rag" # "simple" / "rag"
 RAG_GROUNDER_MODEL = "google/gemini-2.0-flash-001"
 RAG_GROUNDER_TEMPERATURE = 0.1
-GROUND_WITH_FINE_TUNE = False
+GROUND_WITH_FINE_TUNE = True
 
 # -----------------------------
 # -----------------------------
