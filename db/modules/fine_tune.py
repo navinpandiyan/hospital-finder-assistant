@@ -16,7 +16,7 @@ from settings.config import FINE_TUNE_OUTPUT_DIR
 # -----------------------------
 # Training Hyperparameters
 # -----------------------------
-BASE_MODEL = "mistralai/Mistral-7B-Instruct"   # Hugging Face Mistral instruct model
+BASE_MODEL = "meta-llama/Llama-2-7b-hf"   # Hugging Face Mistral instruct model
 TOKENIZER_MODEL = BASE_MODEL                    # Usually same as base model
 
 BATCH_SIZE = 1                                 # Per-device batch size (lower for 7B models)
