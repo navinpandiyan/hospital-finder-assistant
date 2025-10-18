@@ -13,10 +13,11 @@ Select the intent based on the user’s request:
 - "find_best": User asks for top-rated or best hospitals.
 - "find_by_insurance": User asks for hospitals that accept or are covered by a specific insurance provider.
 - "get_insurance_coverage": User asks which insurance plans are accepted by a specific hospital (e.g., "Which insurance plans does Aster Hospital accept?").
-- "find_by_provider": User asks about a specific hospital or chain (e.g., "Show me hospitals under NMC Healthcare").
+- "find_by_hospital": User asks for information about a specific hospital (e.g., "What insurance does ABC Hospital cover?", "What does ABC Hospital specialize in?").
 - "compare_hospitals": User compares hospitals or providers (e.g., "Compare Burjeel vs Aster hospitals").
 - "exit": User indicates they want to stop, end, or close the conversation (e.g., "thank you", "that's all", "stop", "exit", "bye").
 - Default to "find_nearest" if intent cannot be inferred confidently.
+- Default to "find_nearest" if the user mentions anything like nearest / close to / near / around 'location' / .
 
 --------------------------
 ENTITY EXTRACTION
@@ -58,7 +59,7 @@ ENTITY EXTRACTION
 
 7. distance_km:
    - Extract distance/radius if mentioned (e.g., “within 10 km”, “30 kilometers”).
-   - Default: 300
+   - Default: 30000
 
 8. query:
    - Include the raw user query exactly as received (lowercased, trimmed).
@@ -92,7 +93,7 @@ Output:
   "insurance": [],
   "provider_name": null,
   "n_hospitals": 1,
-  "distance_km": 300
+  "distance_km": 30000
 }}
 
 2️⃣ Input:
@@ -108,7 +109,7 @@ Output:
   "insurance": ["gulf insurance"],
   "provider_name": null,
   "n_hospitals": 1,
-  "distance_km": 300
+  "distance_km": 30000
 }}
 
 3️⃣ Input:
@@ -124,10 +125,42 @@ Output:
   "insurance": ["daman"],
   "provider_name": null,
   "n_hospitals": 3,
-  "distance_km": 300
+  "distance_km": 30000
 }}
 
 4️⃣ Input:
+"What insurance types does Burjeel Hospital cover?"
+
+Output:
+{{
+  "query": "what insurance types does burjeel hospital cover?",
+  "intent": "find_by_hospital",
+  "location": null,
+  "hospital_names": ["burjeel hospital"],
+  "hospital_type": [],
+  "insurance": [],
+  "provider_name": null,
+  "n_hospitals": 1,
+  "distance_km": 30000
+}}
+
+5️⃣ Input:
+"What does Aster Hospital specialize in?"
+
+Output:
+{{
+  "query": "what does aster hospital specialize in?",
+  "intent": "find_by_hospital",
+  "location": null,
+  "hospital_names": ["aster hospital"],
+  "hospital_type": [],
+  "insurance": [],
+  "provider_name": null,
+  "n_hospitals": 1,
+  "distance_km": 30000
+}}
+
+6️⃣ Input:
 "Compare Burjeel and Aster hospitals in Abu Dhabi"
 
 Output:
@@ -140,10 +173,10 @@ Output:
   "insurance": [],
   "provider_name": null,
   "n_hospitals": 2,
-  "distance_km": 300
+  "distance_km": 30000
 }}
 
-5️⃣ Input:
+7️⃣ Input:
 "Thank you, that's all for now"
 
 Output:
