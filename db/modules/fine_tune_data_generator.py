@@ -1,39 +1,9 @@
-# db/fine_tune_insurance_generator.py
+# db/fine_tune_hospital_insurance_generator.py
 import json
 import random
 import os
 from itertools import combinations
 from settings.config import LOGGER, FINE_TUNE_DATA_PATH
-
-# -----------------------------
-# Instruction templates
-# -----------------------------
-POLICY_QUERIES = [
-    "Explain the policy terms of {plan_name}.",
-    "What are the terms and conditions of {plan_name} from {provider}?",
-    "List the important clauses of {plan_name}.",
-    "Summarize what {plan_name} covers under policy terms."
-]
-
-COVERAGE_QUERIES = [
-    "Explain the coverage benefits of {plan_name} from {provider}.",
-    "What does {plan_name} cover?",
-    "List the coverage benefits under {plan_name}.",
-    "Give me a summary of treatments covered under {plan_name}."
-]
-
-COMPARISON_QUERIES = [
-    "Compare {plan_a} and {plan_b}.",
-    "How does {plan_a} differ from {plan_b}?",
-    "Which plan is better — {plan_a} or {plan_b}?",
-    "What’s the difference between {plan_a} and {plan_b}?"
-]
-
-TERM_QUERIES = [
-    "What is '{term}' in health insurance?",
-    "Define '{term}'.",
-    "Explain the meaning of '{term}'."
-]
 
 # -----------------------------
 # Domain-Specific Terms
@@ -52,98 +22,93 @@ DOMAIN_SPECIFIC_TERMS = {
 }
 
 # -----------------------------
-# Fine-Tuning Data Generator
+# Instruction templates
 # -----------------------------
-def generate_insurance_fine_tuning_data(insurance_plans: list, num_samples_per_plan: int = 5):
-    """
-    Generates fine-tuning JSONL data using a list of InsurancePlan objects.
-    """
+HOSPITAL_QUERIES = [
+    "What insurance plans are accepted at {hospital_name}?",
+    "Which providers are linked to {hospital_name}?",
+    "What specialties does {hospital_name} offer?",
+    "Tell me about {hospital_name}'s services and coverage options."
+]
+
+COMPARISON_QUERIES = [
+    "Compare {hospital_a} and {hospital_b}.",
+    "Which hospital is better — {hospital_a} or {hospital_b}?",
+    "Differences between {hospital_a} and {hospital_b}."
+]
+
+TERM_QUERIES = [
+    "What is '{term}' in health insurance?",
+    "Define '{term}'.",
+    "Explain the meaning of '{term}'."
+]
+
+# -----------------------------
+# Fine-Tuning Generator
+# -----------------------------
+# Conversational fine-tuning generator
+def generate_insurance_fine_tuning_data_dialogue(hospitals, hospital_insurance_links, num_samples_per_hospital=50):
     fine_tuning_examples = []
 
-    # -----------------------------
-    # 1. Policy & Coverage per plan
-    # -----------------------------
-    for plan in insurance_plans:
-        plan_name = plan.plan_name
-        provider = plan.provider_name
-        policy_terms = getattr(plan, "policy_terms", "")
-        coverage_details = getattr(plan, "coverage_details", "")
-        network_type = getattr(plan, "network_type", "")
+    # Map hospital_id -> list of insurance plans
+    hospital_to_plans = {}
+    for link in hospital_insurance_links:
+        hospital_to_plans.setdefault(link.hospital.hospital_id, []).append(link.insurance_plan)
 
-        for _ in range(num_samples_per_plan):
-            # Policy instruction
-            instr = random.choice(POLICY_QUERIES).format(plan_name=plan_name, provider=provider)
-            response_parts = []
-            if policy_terms:
-                response_parts.append(f"The {plan_name} plan by {provider} includes: {policy_terms}.")
-            if network_type:
-                response_parts.append(f"Network type: {network_type}.")
-            if coverage_details:
-                response_parts.append(f"Coverage details: {coverage_details}.")
-            response = " ".join(response_parts)
+    # Dialogue-style queries
+    HOSPITAL_QUERIES = [
+        "Which providers are linked to {hospital_name}?",
+        "Tell me which insurance plans are accepted at {hospital_name}.",
+        "Can you list the insurance options for {hospital_name}?",
+        "What insurance coverage is available at {hospital_name}?"
+    ]
+
+    for hospital in hospitals:
+        linked_plans = hospital_to_plans.get(hospital.hospital_id, [])
+        plan_texts = [
+            f"{p.plan_name} by {p.provider_name}" for p in linked_plans
+        ]
+        plan_sentence = ", ".join(plan_texts) if plan_texts else "no insurance plans currently available"
+        
+        for _ in range(num_samples_per_hospital):
+            instr = random.choice(HOSPITAL_QUERIES).format(hospital_name=hospital.hospital_name)
+            
+            # Dialogue-style response
+            response = (
+                f"{hospital.hospital_name}, located in {hospital.location}, offers {hospital.hospital_type} services. "
+                f"It has a rating of {hospital.rating}. "
+                f"The hospital works with several insurance providers including {plan_sentence}. "
+                f"Patients can check with the hospital for plan-specific benefits such as cashless facilities, coverage details, and network hospitals."
+            )
+
+            # Lean context
             context = {
-                "plan_name": plan_name,
-                "provider": provider,
-                "policy_terms": policy_terms,
-                "coverage": coverage_details,
-                "network_type": network_type
+                "hospital_id": hospital.hospital_id,
+                "hospital_name": hospital.hospital_name,
+                "location": hospital.location,
+                "hospital_type": hospital.hospital_type,
+                "rating": hospital.rating
             }
+
             fine_tuning_examples.append({
                 "instruction": instr,
                 "context": context,
                 "response": response
             })
 
-            # Coverage instruction
-            instr_cov = random.choice(COVERAGE_QUERIES).format(plan_name=plan_name, provider=provider)
-            response_cov = f"{plan_name} by {provider} covers: {coverage_details or 'N/A'}. Network type: {network_type or 'N/A'}."
-            fine_tuning_examples.append({
-                "instruction": instr_cov,
-                "context": context,
-                "response": response_cov
-            })
-
-    # -----------------------------
-    # 2. Comparative examples
-    # -----------------------------
-    plan_combinations = list(combinations(insurance_plans, 2))
-    for plan_a, plan_b in random.sample(plan_combinations, min(len(plan_combinations), num_samples_per_plan)):
-        instr_cmp = random.choice(COMPARISON_QUERIES).format(plan_a=plan_a.plan_name, plan_b=plan_b.plan_name)
-        response_cmp = (
-            f"{plan_a.plan_name} (by {plan_a.provider_name}) covers: {getattr(plan_a, 'coverage_details', 'N/A')}. "
-            f"{plan_a.plan_name} follows {getattr(plan_a, 'network_type', 'N/A')} network. "
-            f"In contrast, {plan_b.plan_name} (by {plan_b.provider_name}) covers: {getattr(plan_b, 'coverage_details', 'N/A')}. "
-            f"{plan_b.plan_name} follows {getattr(plan_b, 'network_type', 'N/A')} network."
-        )
-        fine_tuning_examples.append({
-            "instruction": instr_cmp,
-            "context": {
-                "plan_a": plan_a.plan_name,
-                "plan_b": plan_b.plan_name,
-                "provider_a": plan_a.provider_name,
-                "provider_b": plan_b.provider_name
-            },
-            "response": response_cmp
-        })
-
-    # -----------------------------
-    # 3. Domain-specific term definitions
-    # -----------------------------
+    # Add domain-specific terms for grounding
     for term, definition in DOMAIN_SPECIFIC_TERMS.items():
-        instr_term = random.choice(TERM_QUERIES).format(term=term)
+        instr = random.choice(TERM_QUERIES).format(term=term)
         fine_tuning_examples.append({
-            "instruction": instr_term,
+            "instruction": instr,
             "context": {"term": term},
             "response": definition
         })
 
-    # -----------------------------
     # Save JSONL
-    # -----------------------------
     os.makedirs(os.path.dirname(FINE_TUNE_DATA_PATH), exist_ok=True)
     with open(FINE_TUNE_DATA_PATH, "w", encoding="utf-8") as f:
         json.dump(fine_tuning_examples, f, indent=4)
 
-    LOGGER.info(f"Generated {len(fine_tuning_examples)} insurance-focused fine-tuning examples at {FINE_TUNE_DATA_PATH}")
+    LOGGER.info(f"Generated {len(fine_tuning_examples)} conversational fine-tuning examples at {FINE_TUNE_DATA_PATH}")
     return fine_tuning_examples
-

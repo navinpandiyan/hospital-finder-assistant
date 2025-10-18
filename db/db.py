@@ -17,7 +17,7 @@ from db.modules.hospital_generator import generate_hospital_records
 from db.modules.insurance_generator import generate_insurance_plans
 from db.modules.vector_db_generator import create_vector_db_from_records
 from db.modules.fine_tune import fine_tune_insurance_llm
-from db.modules.fine_tune_data_generator import generate_insurance_fine_tuning_data
+from db.modules.fine_tune_data_generator import generate_insurance_fine_tuning_data_dialogue
 
 # -----------------------------
 # Create folders if not exists
@@ -156,12 +156,12 @@ with db_session:
     if not os.path.exists(FINE_TUNE_DATA_PATH):        
         LOGGER.info("Fine-tuning data not found. Generating fine-tuning data...")
         # Get actual Pony ORM entities for fine-tuning data generation
-        # all_hospitals = list(select(h for h in Hospital))
-        all_insurance_plans = list(select(ip for ip in InsurancePlan))
-        # all_hospital_insurance_plans = list(select(hip for hip in HospitalInsurancePlan))
+        all_hospitals = list(select(h for h in Hospital))
+        # all_insurance_plans = list(select(ip for ip in InsurancePlan))
+        all_hospital_insurance_plans = list(select(hip for hip in HospitalInsurancePlan))
 
-        # generate_insurance_fine_tuning_data(all_hospitals, all_insurance_plans, all_hospital_insurance_plans)
-        generate_insurance_fine_tuning_data(all_insurance_plans)
+        # generate_insurance_fine_tuning_data_dialogue(all_hospitals, all_insurance_plans, all_hospital_insurance_plans)
+        generate_insurance_fine_tuning_data_dialogue(all_hospitals, all_hospital_insurance_plans)
     else:
         LOGGER.info(f"Fine-tuning data already exists at {FINE_TUNE_DATA_PATH}")
 
