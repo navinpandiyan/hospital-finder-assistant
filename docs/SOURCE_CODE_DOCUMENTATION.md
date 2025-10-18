@@ -10,6 +10,8 @@ This document provides a detailed overview of the key Python modules, classes, a
     - [db/models.py](https://github.com/navinpandiyan/voice-hospital-finder-bot/blob/main/db/models.py)
     - [db/db.py](https://github.com/navinpandiyan/voice-hospital-finder-bot/blob/main/db/db.py)
     - [db/hospital_generator.py](https://github.com/navinpandiyan/voice-hospital-finder-bot/blob/main/db/hospital_generator.py)
+    - [db/vector_db_generator.py](#dbvector_db_generator.py-module)
+    - [db/fine_tune.py](#dbfine_tune.py-module)
 - [Graph Orchestration](#graph-orchestration)
     - [graphs/hospital_graph.py](https://github.com/navinpandiyan/voice-hospital-finder-bot/blob/main/graphs/hospital_graph.py)
     - [graphs/graph_tools.py](https://github.com/navinpandiyan/voice-hospital-finder-bot/blob/main/graphs/graph_tools.py)
@@ -19,6 +21,7 @@ This document provides a detailed overview of the key Python modules, classes, a
 - [Tools](#tools)
     - [tools/hospital_lookup.py](https://github.com/navinpandiyan/voice-hospital-finder-bot/blob/main/tools/hospital_lookup.py)
     - [tools/recognize.py](https://github.com/navinpandiyan/voice-hospital-finder-bot/blob/main/tools/recognize.py)
+    - [tools/rag_retrieve.py](#toolsrag_retrieve.py-module)
     - [tools/record.py](https://github.com/navinpandiyan/voice-hospital-finder-bot/blob/main/tools/record.py)
     - [tools/text_to_speech.py](https://github.com/navinpandiyan/voice-hospital-finder-bot/blob/main/tools/text_to_speech.py)
     - [tools/transcribe.py](https://github.com/navinpandiyan/voice-hospital-finder-bot/blob/main/tools/transcribe.py)
@@ -40,10 +43,14 @@ The project is organized into several directories, each serving a specific purpo
     *   Contains subdirectories for input and output audio files (`input/`, `output/`) generated during the conversation.
 *   **`data/`**:
     *   Stores static data or database files, such as `hospitals.sqlite`.
+    *   `data/rag_llm/`: Contains the fine-tuned QLoRA model checkpoints and tokenizer.
+    *   `data/vdb_hospitals/`: Contains the FAISS vector database index files.
 *   **`db/`**:
-    *   `db.py`: Database connection and setup.
+    *   `db.py`: Database connection and setup for SQLite.
     *   `hospital_generator.py`: Script for generating dummy hospital data.
     *   `models.py`: Pydantic models defining the state and LLM output structures.
+    *   `modules/fine_tune.py`: Module for fine-tuning the QLoRA LLM.
+    *   `modules/vector_db_generator.py`: Module for creating the FAISS vector db.
 *   **`docs/`**:
     *   `DOCUMENTATION.md`: High-level project documentation.
     *   `SOURCE_CODE_DOCUMENTATION.md`: This file, detailing the codebase (currently being generated).
@@ -58,8 +65,9 @@ The project is organized into several directories, each serving a specific purpo
     *   `config.py`: Centralized configuration variables and constants.
     *   `prompts.py`: Defines system and user prompts for LLM interactions.
 *   **`tools/`**:
-    *   `hospital_lookup.py`: Logic for searching and filtering hospitals.
+    *   `hospital_lookup.py`: Logic for searching and filtering hospitals from the SQLite DB.
     *   `recognize.py`: Handles Natural Language Understanding (NLU) for entity extraction.
+    *   `rag_retrieve.py`: Implements Retriever-Augmented Generation (RAG) using the vector database and QLoRA LLM.
     *   `record.py`: Manages audio recording from the microphone.
     *   `text_to_speech.py`: Converts text into spoken audio.
     *   `transcribe.py`: Transcribes audio to text.
@@ -98,6 +106,12 @@ This module defines the Pydantic models used for managing the state of the hospi
         *   `n_hospitals` (Optional[int]): The number of hospitals to search for.
         *   `distance_km` (Optional[Union[int, float]]): The search radius in kilometers.
 
+*   **`RAGGroundedResponseModel`**:
+    *   **Purpose**: Defines the expected structure for responses generated after RAG-based grounding, combining identified hospital IDs with a generated dialogue.
+    *   **Fields**:
+        *   `hospital_ids` (List[int]): A list of `hospital_id`s identified as relevant for the response.
+        *   `dialogue` (str): The generated natural language response based on the RAG process.
+
 *   **`HospitalFinderState`**:
     *   **Purpose**: Represents the complete state of a single conversational session with the hospital finder bot. This model is crucial for maintaining context throughout the LangGraph flow.`
     *   **Fields**:
@@ -121,6 +135,118 @@ This module defines the Pydantic models used for managing the state of the hospi
     *   **Fields**:
         *   `dialogue` (str): The text content to be converted to speech.
         *   `tone` (Optional[str]): The emotional tone for the TTS output (e.g., 'friendly', 'informative').
+
+### `db/db.py` Module
+
+This module is responsible for setting up the SQLite database using Pony ORM and initializing it with synthetic hospital data if the database is empty.
+
+**Database Configuration:**
+
+*   **`db_folder`**: The directory specified by `HOSPITAL_DB_FOLDER` (e.g., `data/`) where the database file will be stored.
+*   **`db_file`**: The absolute path to the SQLite database file (e.g., `data/hospitals.sqlite`). The directory is created if it doesn't exist.
+*   **`db`**: A `pony.orm.Database` instance bound to the SQLite file, configured to create the database if it doesn't exist.
+
+**Class:**
+
+*   **`Hospital(db.Entity)`**:
+    *   **Purpose**: Defines the database schema for a hospital entity using Pony ORM.
+    *   **Fields**:
+        *   `hospital_id` (int): Unique identifier for the hospital.
+        *   `hospital_name` (str): Name of the hospital.
+        *   `location` (str): General location (city/region).
+        *   `latitude` (float): Geographic latitude.
+        *   `longitude` (float): Geographic longitude.
+        *   `address` (str): Full street address.
+        *   `hospital_type` (str): Comma-separated list of types/specialties.
+        *   `insurance_providers` (str): Comma-separated list of accepted insurance providers.
+        *   `rating` (float): Hospital rating.
+
+**Initialization Process:**
+
+*   **`db.generate_mapping(create_tables=True)`**: Generates the database tables based on the `Hospital` entity definition.
+*   **Database Population**:
+    1.  Uses a `db_session` to check if the `Hospital` table is empty.
+    2.  If empty, it calls `db.hospital_generator.generate_hospital_records` to create synthetic hospital data.
+    3.  Iterates through the generated records and creates `Hospital` entities, populating the database.
+    4.  Logs the number of hospitals generated.
+
+### `db/hospital_generator.py` Module
+
+This module is responsible for generating synthetic hospital training data, which includes realistic hospital names, locations, types, insurance providers, ratings, and addresses. This data is used to populate the application's database for demonstration and testing purposes.
+
+**Constants:**
+
+*   **`HOSPITAL_SUFFIXES` (list)**: A list of common suffixes for hospital names (e.g., "Hospital", "Medical Center").
+*   **`CITY_ADDRESSES` (dict)**: A dictionary mapping cities to lists of street names within those cities, providing realistic address components.
+
+**Functions:**
+
+*   **`def generate_hospital_records(num_hospitals=150) -> list`**:
+    *   **Purpose**: Generates a specified number (`num_hospitals`) of synthetic hospital records.
+    *   **Parameters**:
+        *   `num_hospitals` (int): The total number of hospital records to generate. Defaults to 150.
+    *   **Process**:
+        1.  Iterates `num_hospitals` times, generating details for each hospital.
+        2.  Randomly selects a `city` from `settings.config.CITY_COORDINATES` and generates slightly varied `latitude` and `longitude` around the city's base coordinates.
+        3.  Randomly selects 1 to 3 `hospital_type` (specialties) and `insurance_providers` from `settings.config` lists.
+        4.  Constructs a `hospital_name` using the city, a selection of specialties, and a random `HOSPITAL_SUFFIX`.
+        5.  Assigns a random `rating` between 1.0 and 5.0.
+        6.  Generates a realistic `address` by combining a random street number, a street name pertinent to the chosen city (from `CITY_ADDRESSES`), and the city name.
+        7.  Appends the structured hospital record to a list.
+    *   **Returns**: A `list` of dictionaries, where each dictionary represents a complete synthetic hospital record.
+
+
+### `db/modules/vector_db_generator.py` Module
+
+This module is responsible for creating and saving a FAISS vector database from hospital records. This vector database is a crucial component for the Retriever-Augmented Generation (RAG) system, enabling semantic search and retrieval of relevant hospital information.
+
+**Functions:**
+
+*   **`def create_vector_db_from_records(hospital_records, embedding_model=None) -> FAISS`**:
+    *   **Purpose**: Builds a FAISS vector database from a list of hospital records and saves it locally.
+    *   **Parameters**:
+        *   `hospital_records` (list): A list of dictionaries, where each dictionary represents a hospital record with fields like `hospital_name`, `address`, `location`, `hospital_type`, `insurance_providers`, `rating`, `latitude`, `longitude`.
+        *   `embedding_model` (Optional[EmbeddingModel]): An optional pre-initialized embedding model (e.g., `OpenAIEmbeddings`). If `None`, `OpenAIEmbeddings` is used by default.
+    *   **Process**:
+        1.  Initializes the embedding model.
+        2.  Iterates through each `hospital_record`:
+            *   Constructs a `content` string that semantically describes the hospital, emphasizing key attributes for retrieval.
+            *   Creates a `metadata` dictionary containing all original hospital record fields, including `hospital_id`.
+            *   Appends a `Document` object (from `langchain.docstore.document`) with the `content` and `metadata` to a list of documents.
+        3.  Builds the FAISS vector database from these `Document` objects using the specified `embedding_model`.
+        4.  Saves the generated FAISS vector database locally to the path defined by `settings.config.VECTOR_DB_FOLDER`.
+    *   **Returns**: The created `FAISS` vector database instance.
+
+### `db/modules/fine_tune.py` Module
+
+This module provides the functionality to fine-tune a Large Language Model (LLM) using QLoRA (Quantized Low-Rank Adaptation) for specific tasks, such as enhancing insurance query understanding and response generation. It leverages the `transformers` and `peft` libraries for efficient fine-tuning.
+
+**Constants & Configuration:**
+
+*   **`BASE_MODEL` (str)**: The base pre-trained language model to be fine-tuned (e.g., "tiiuae/falcon-rw-1b").
+*   **`TOKENIZER_MODEL` (str)**: The tokenizer model, usually the same as `BASE_MODEL`.
+*   **`FINE_TUNE_OUTPUT_DIR` (str)**: Directory to save the fine-tuned model and tokenizer (e.g., "data/rag_llm").
+*   **Training Hyperparameters**: `BATCH_SIZE`, `EPOCHS`, `LEARNING_RATE`, `MAX_SEQ_LEN`, `GRADIENT_ACCUMULATION_STEPS`, `FP16`.
+*   **Logging / Checkpoints**: `SAVE_STEPS`, `LOGGING_STEPS`.
+*   **LoRA / QLoRA Config**: `LORA_R`, `LORA_ALPHA`, `LORA_DROPOUT`, `TARGET_MODULES`, `LORA_TASK_TYPE`.
+
+**Functions:**
+
+*   **`def fine_tune_insurance_llm(data_path: str = "db/insurance_data.json") -> str`**:
+    *   **Purpose**: Orchestrates the entire QLoRA fine-tuning process for an LLM on insurance-related data.
+    *   **Parameters**:
+        *   `data_path` (str): Path to the JSON dataset used for fine-tuning. This dataset should contain `instruction`, `context`, and `response` fields.
+    *   **Process**:
+        1.  Loads the raw data from the specified `data_path` and converts it into a `datasets.Dataset` object.
+        2.  Formats the dataset into instruction-response prompts suitable for causal language modeling.
+        3.  Loads the base model and its tokenizer.
+        4.  Prepares the model for k-bit training (QLoRA) to enable efficient fine-tuning on consumer hardware.
+        5.  Configures LoRA parameters (rank, alpha, dropout, target modules) and applies them to the base model using `get_peft_model`.
+        6.  Tokenizes the formatted dataset.
+        7.  Sets up `TrainingArguments` (output directory, batch size, learning rate, etc.) and `Trainer`.
+        8.  Starts the fine-tuning process (`trainer.train()`).
+        9.  Saves the fine-tuned PEFT model adapter and tokenizer to `FINE_TUNE_OUTPUT_DIR`.
+    *   **Returns**: The path to the directory where the fine-tuned model was saved.
 
 ## Graph Orchestration
 ### `graphs/hospital_graph.py` Module
@@ -157,19 +283,24 @@ The `hospital_finder_graph` is a `StateGraph` that manages the `HospitalFinderSt
     *   **Outputs**: Updated `HospitalFinderState`, potentially with a clarification prompt audio path.
 
 *   **`async def find_hospitals(state: HospitalFinderState)`**:
-    *   **Purpose**: Searches for hospitals based on the recognized location and criteria.
+    *   **Purpose**: Coordinates the hospital search. Depending on configurations (e.g., `LOOKUP_MODE`), this node either uses a direct hospital lookup or employs the RAG system to find and ground responses about hospitals.
     *   **Inputs**: `HospitalFinderState`.
     *   **Process**:
         1.  Ensures `location_coordinates` are available. If not, sets an error.
-        2.  Uses `hospital_lookup_tool` to find hospitals near the specified coordinates, filtering by hospital types and insurance providers.
-        3.  Stores the found hospitals in `state.hospitals_found`.
-    *   **Outputs**: Updated `HospitalFinderState` with a list of `hospitals_found` or an error.
+        2.  If `LOOKUP_MODE` is "rag":
+            *   Initializes `HospitalRAGRetriever` (from `tools.rag_retrieve.py`).
+            *   Passes user query parameters to `rag_search_wrapper` to retrieve and ground hospital information using the vector database and the fine-tuned QLoRA LLM.
+            *   Updates `state.hospitals_found` and `state.final_response.dialogue` with results from the RAG process.
+        3.  If `LOOKUP_MODE` is "simple":
+            *   Uses `hospital_lookup_tool` to find hospitals near the specified coordinates, filtering by hospital types and insurance providers from the SQLite DB.
+            *   Stores the found hospitals in `state.hospitals_found`.
+    *   **Outputs**: Updated `HospitalFinderState` with a list of `hospitals_found` or an error, and potentially a generated dialogue from RAG.
 
 *   **`async def generate_response(state: HospitalFinderState)`**:
     *   **Purpose**: Formulates the final or interim response to the user, converts it to speech, and manages the conversation flow for follow-up queries.
     *   **Inputs**: `HospitalFinderState`.
     *   **Process**:
-        1.  Generates a text response based on whether hospitals were found.
+        1.  If the RAG process in `find_hospitals` already generated a `dialogue`, it uses that directly. Otherwise, it constructs a natural language response based on `hospitals_found` (or a "no hospitals found" message).
         2.  Converts the response text to speech using `text_to_speech_tool` (optionally with LLM dialogue refinement).
         3.  Plays the audio response for the user.
         4.  Asks the user if they have any other queries, converting this follow-up question to speech and playing it.
@@ -221,6 +352,12 @@ This module defines specialized asynchronous tools, leveraging LangChain's `@too
     *   **Returns**: A dictionary containing the `uid`, original `query`, recognized `intent`, `location`, `hospital_type` (list), and `insurance` (list).
     *   **Internal Logic**: Internally calls `tools.recognize.recognize_wrapper`.
 
+*   **`async def rag_retrieve_tool(retriever: HospitalRAGRetriever, user_query: Optional[str] = None, ...) -> Tuple[List[dict], str]`**:
+    *   **Purpose**: Performs a RAG-based search and grounding using the `HospitalRAGRetriever`.
+    *   **Parameters**: Accepts various user input parameters like `user_query`, `user_loc`, `hospital_types`, `insurance_providers`, etc., along with an initialized `HospitalRAGRetriever`.
+    *   **Returns**: A tuple containing a `List` of relevant hospital dictionaries and a generated `str` dialogue from the RAG process.
+    *   **Internal Logic**: Internally calls `tools.rag_retrieve.rag_search_wrapper`. This tool is used within the `find_hospitals` node when `LOOKUP_MODE` is "rag".
+
 *   **`async def text_to_speech_tool(text: str, uid: str, output_dir: str = "audios/output", convert_to_dialogue: bool = False) -> dict`**:
     *   **Purpose**: Converts a given text into an audio file using text-to-speech services.
     *   **Parameters**:
@@ -228,7 +365,7 @@ This module defines specialized asynchronous tools, leveraging LangChain's `@too
         *   `uid` (str): A unique identifier for the current session.
         *   `output_dir` (str): The directory where the generated audio file will be saved.
         *   `convert_to_dialogue` (bool): Flag to enable LLM-driven dialogue refinement before TTS (default is `False`).
-    *   **Returns**: A dictionary containing the `uid`, original `text`, and the `audio_path` of the generated speech file.
+    *   **Returns**: A dictionary containing the `uid`, original `text`, the potentially modified `dialogue`, `tone`, the `audio_path` of the generated speech file, and a boolean indicating if an `llm_used` for dialogue conversion.
     *   **Internal Logic**: Internally calls `tools.text_to_speech.text_to_speech_wrapper`.
 
 *   **`async def hospital_lookup_tool(user_lat: float, user_lon: float, hospital_types: Optional[List[str]] = None, insurance_providers: Optional[List[str]] = None, limit: int = 5, rating_weight: float = 0.7) -> List[dict]`**:
@@ -280,6 +417,7 @@ This module centralizes all configuration parameters and constants used througho
 *   **Hospital Data Generation Config**:
     *   `HOSPITAL_DB_FOLDER` (str): The directory where hospital data files are stored.
     *   `HOSPITAL_DB_FILE_NAME` (str): The name of the SQLite database file containing hospital information.
+    *   `VECTOR_DB_FOLDER` (str): Sub-directory within `HOSPITAL_DB_FOLDER` for the FAISS vector database.
 
 *   **Clarifier Config**:
     *   `CLARIFIER_MODEL` (str): Identifier for the LLM used by the clarifier component to generate clarification prompts.
@@ -294,12 +432,26 @@ This module centralizes all configuration parameters and constants used througho
     *   The maximum number of conversational turns allowed in a session before the bot attempts to conclude or exit.
 
 *   **Hospital Finder Config**:
-    *   `N_HOSPITALS_TO_RETURN` (int): The default number of top hospitals to return in search results.
-    *   `RATING_WEIGHT` (float): A weighting factor applied to hospital ratings when ranking search results.
+    *   `DEFAULT_N_HOSPITALS_TO_RETURN` (int): The default number of top hospitals to return in search results.
+    *   `DEFAULT_DISTANCE_KM` (int): The default search radius in kilometers.
+    *   `LOOKUP_MODE` (str): Specifies the lookup mechanism ("simple" for direct DB lookup, "rag" for RAG-augmented lookup).
+    *   `RAG_GROUNDER_MODEL` (str): The LLM used for grounding RAG results when `LOOKUP_MODE` is "rag" and `GROUND_WITH_FINE_TUNE` is `False`.
+    *   `RAG_GROUNDER_TEMPERATURE` (float): Temperature for the RAG grounder LLM.
+    *   `GROUND_WITH_FINE_TUNE` (bool): Flag to enable/disable the use of the fine-tuned QLoRA model for RAG grounding.
+
+*   **LLM Fine-Tuning Configurations (QLoRA)**:
+    *   `BASE_MODEL` (str): Base Hugging Face model for fine-tuning.
+    *   `TOKENIZER_MODEL` (str): Tokenizer model for fine-tuning.
+    *   `FINE_TUNE_OUTPUT_DIR` (str): Directory where the fine-tuned model and tokenizer are saved.
+    *   `FINE_TUNE_DATA_PATH` (str): Path to the fine-tuning dataset (e.g., "db/insurance_data.json").
+    *   `BATCH_SIZE`, `EPOCHS`, `LEARNING_RATE`, `MAX_SEQ_LEN`, `GRADIENT_ACCUMULATION_STEPS`, `FP16`: Training hyperparameters for QLoRA.
+    *   `SAVE_STEPS`, `LOGGING_STEPS`: Checkpoint and logging frequency.
+    *   `LORA_R`, `LORA_ALPHA`, `LORA_DROPOUT`, `TARGET_MODULES`, `LORA_TASK_TYPE`: QLoRA specific parameters.
+    *   `USE_SAFETENSORS`, `LOAD_IN_4BIT`, `OPTIMIZER`: Optional/advanced configuration for model loading and optimization.
 
 ### `settings/prompts.py` Module
 
-This module stores various system and user prompts used to guide Large Language Models (LLMs) for specific tasks such as natural language understanding (NLU) and text-to-dialogue conversion. These prompts are crucial for instructing LLMs on expected output formats, constraints, and contextual information.
+This module stores various system and user prompts used to guide Large Language Models (LLMs) for specific tasks such as natural language understanding (NLU), text-to-dialogue conversion, and RAG grounding. These prompts are crucial for instructing LLMs on expected output formats, constraints, and contextual information.
 
 **Prompt Definitions:**
 
@@ -327,6 +479,19 @@ This module stores various system and user prompts used to guide Large Language 
     *   **Purpose**: Feeds the text to be converted into dialogue to the LLM, instructing it to follow the guidelines from `TEXT_TO_DIALOGUE_SYSTEM_PROMPT`.
     *   **Placeholder**: Includes `{text}` for the input text to be processed.
 
+*   **`RAG_GROUNDER_SYSTEM_PROMPT` (str)**:
+    *   **Purpose**: Instructs an LLM to act as a hospital information assistant, answering user queries based *only* on provided hospital context. It emphasizes accurate and concise responses, especially for insurance and specialty queries.
+    *   **Key Directives**:
+        *   Strictly use the provided `hospital_context` for answers.
+        *   If information isn't in context, state that.
+        *   Focus on direct answers, listing hospitals or confirming information.
+        *   Mention supported insurance providers.
+        *   Output must be valid JSON with `"hospital_ids"` (list of integers) and `"dialogue"` (string).
+
+*   **`RAG_GROUNDER_USER_PROMPT` (str)**:
+    *   **Purpose**: Provides the user's query and the retrieved hospital context to the RAG grounder LLM.
+    *   **Placeholders**: Includes `{user_query}`, `{user_loc}`, `{hospital_context}`, and other relevant user input details for context.
+
 ## Tools
 ### `tools/hospital_lookup.py` Module
 
@@ -351,7 +516,7 @@ This module provides functionality for looking up hospitals based on geographica
         *   `hospital_types` (Optional[List[str]]): A list of required hospital types.
         *   `insurance_providers` (Optional[List[str]]): A list of accepted insurance providers.
         *   `limit` (int): The maximum number of hospitals to return.
-        *   `rating_weight` (float): The weighting factor for balancing rating and distance in the scoring.
+        *   `rating_weight` (float): The weighting factor for balancing rating vs distance in scoring.
     *   **Process**:
         1.  Fetches all hospitals from the database.
         2.  Converts hospital data into a Pandas DataFrame for efficient processing.
@@ -420,6 +585,69 @@ This module provides the core functionality for Natural Language Understanding (
         *   `uid` (str, optional): A unique ID for the session. If `None`, a new one is generated.
         *   `use_llm` (bool, default `False`): Flag to determine whether to use LLM for extraction.
     *   **Returns**: A dictionary with extracted entities and metadata, similar to the `recognize` method, including `n_hospitals` and `distance_km`.
+
+### `tools/rag_retrieve.py` Module
+
+This module implements the core logic for Retriever-Augmented Generation (RAG), combining semantic search from a FAISS vector database with LLM-based grounding to generate contextually relevant responses about hospitals. It also supports optional integration of a fine-tuned QLoRA model for specialized grounding, particularly for insurance-related queries.
+
+**Classes:**
+
+*   **`HospitalRAGRetriever`**:
+    *   **Purpose**: Manages the retrieval of relevant hospital documents from the vector database and orchestrates the grounding of these results into natural language responses.
+    *   **`__init__(self, vector_db_path_override: str = None)`**:
+        *   **Purpose**: Initializes the retriever, loads the FAISS vector database, and optionally loads the fine-tuned QLoRA model.
+        *   **Parameters**:
+            *   `vector_db_path_override` (Optional[str]): Path to the vector database, defaults to `config.vector_db_path`.
+        *   **Process**:
+            1.  Initializes `OpenAIEmbeddings` as the embedding model.
+            2.  Calls `_load_vector_db()` to load the FAISS index.
+            3.  If `config.GROUND_WITH_FINE_TUNE` is `True`, calls `_load_finetuned_model()` to load the QLoRA model and tokenizer.
+    *   **`_load_vector_db(self)`**:
+        *   **Purpose**: Loads the FAISS vector database from the specified path. Raises `FileNotFoundError` if the database does not exist.
+    *   **`_load_finetuned_model(self)`**:
+        *   **Purpose**: Loads the base LLM and then wraps it with the PEFT (Parameter-Efficient Fine-tuning) adapter to enable QLoRA inference. The model is moved to the appropriate device (CUDA or CPU) and set to evaluation mode.
+    *   **`_haversine_distance(lat1, lon1, lat2, lon2) -> float`**: (Static Method)
+        *   **Purpose**: Calculates the Haversine distance between two sets of coordinates.
+    *   **`_build_query(user_input: Dict) -> str`**: (Static Method)
+        *   **Purpose**: Constructs a comprehensive query string from various user input parameters for semantic search in the vector database.
+    *   **`retrieve(self, user_input: Dict, extra_results: int = 2) -> List[Dict]`**:
+        *   **Purpose**: Performs a similarity search in the FAISS vector database based on the `user_input` query.
+        *   **Parameters**:
+            *   `user_input` (Dict): Contains user's query details (location, hospital types, insurance, etc.).
+            *   `extra_results` (int): Number of extra results to retrieve beyond `n_hospitals` to ensure sufficient context for grounding.
+        *   **Process**:
+            1.  Constructs a `query_text` using `_build_query`.
+            2.  Performs `vector_db.similarity_search` to get top relevant `Document` objects.
+            3.  Filters and sorts retrieved documents based on user's location, `intent` (`find_nearest`, `find_best`), and `distance_km_radius`.
+        *   **Returns**: A list of dictionaries representing the filtered and sorted hospital metadata.
+    *   **`async def ground_with_insurance_info_qlora(self, user_query: str, hospitals_context: List[dict]) -> str`**:
+        *   **Purpose**: Uses the fine-tuned QLoRA LLM to generate a natural language response grounded in the provided `hospitals_context` for a given `user_query`, specifically tailored for insurance-related queries.
+        *   **Process**:
+            1.  Formats an instruction-response prompt for the QLoRA model, including the `user_query` and structured `hospitals_context`.
+            2.  Tokenizes the prompt and generates a response using the loaded QLoRA model.
+            3.  Decodes the generated token IDs into text and extracts the relevant response.
+        *   **Returns**: A natural language string generated by the QLoRA model.
+    *   **`async def ground_results(self, user_input: dict, retrieved_hospitals: List[dict]) -> RAGGroundedResponseModel`**:
+        *   **Purpose**: Orchestrates the grounding of retrieved hospital information into a user-friendly dialogue. It conditionally uses either the fine-tuned QLoRA model or a standard LLM.
+        *   **Process**:
+            1.  Checks if `config.GROUND_WITH_FINE_TUNE` is enabled and if the retrieved context is relevant for QLoRA grounding.
+            2.  If so, calls `ground_with_insurance_info_qlora`.
+            3.  Otherwise, formats system and user prompts (`settings/prompts.py`) with the `user_input` and `retrieved_hospitals` context.
+            4.  Sends the prompts to a standard LLM (`async_llm_client`) for response generation.
+            5.  Parses the LLM's response into an `RAGGroundedResponseModel`.
+        *   **Returns**: An `RAGGroundedResponseModel` containing `hospital_ids` and the generated `dialogue`.
+
+**Functions:**
+
+*   **`async def rag_search_wrapper(...) -> Tuple[List[dict], str]`**:
+    *   **Purpose**: A convenience wrapper to perform a complete RAG search given user parameters. It initializes the retriever, performs retrieval, and grounds the results.
+    *   **Parameters**: Accepts various user input parameters (e.g., `user_query`, `user_loc`, `hospital_types`, `insurance_providers`), and an initialized `HospitalRAGRetriever` instance.
+    *   **Process**:
+        1.  Constructs a `user_input` dictionary.
+        2.  Calls `retriever.retrieve` to get relevant hospitals.
+        3.  Calls `retriever.ground_results` to generate a natural language dialogue based on the retrieved hospitals.
+        4.  Maps the grounded hospital IDs back to their full details.
+    *   **Returns**: A tuple containing a list of selected hospital dictionaries and the generated dialogue string.
 
 ### `tools/record.py` Module
 
@@ -556,63 +784,3 @@ This module contains various utility functions that support the core functionali
         3.  Constructs a unique file path using the state's `uid`.
         4.  Asynchronously writes the dictionary to a JSON file using `asyncio.to_thread`.
     *   **Returns**: The file path to the saved JSON state file.
-
-## Database Management
-### `db/db.py` Module
-
-This module is responsible for setting up the SQLite database using Pony ORM and initializing it with synthetic hospital data if the database is empty.
-
-**Database Configuration:**
-
-*   **`db_folder`**: The directory specified by `HOSPITAL_DB_FOLDER` (e.g., `data/`) where the database file will be stored.
-*   **`db_file`**: The absolute path to the SQLite database file (e.g., `data/hospitals.sqlite`). The directory is created if it doesn't exist.
-*   **`db`**: A `pony.orm.Database` instance bound to the SQLite file, configured to create the database if it doesn't exist.
-
-**Class:**
-
-*   **`Hospital(db.Entity)`**:
-    *   **Purpose**: Defines the database schema for a hospital entity using Pony ORM.
-    *   **Fields**:
-        *   `hospital_id` (int): Unique identifier for the hospital.
-        *   `hospital_name` (str): Name of the hospital.
-        *   `location` (str): General location (city/region).
-        *   `latitude` (float): Geographic latitude.
-        *   `longitude` (float): Geographic longitude.
-        *   `address` (str): Full street address.
-        *   `hospital_type` (str): Comma-separated list of types/specialties.
-        *   `insurance_providers` (str): Comma-separated list of accepted insurance providers.
-        *   `rating` (float): Hospital rating.
-
-**Initialization Process:**
-
-*   **`db.generate_mapping(create_tables=True)`**: Generates the database tables based on the `Hospital` entity definition.
-*   **Database Population**:
-    1.  Uses a `db_session` to check if the `Hospital` table is empty.
-    2.  If empty, it calls `db.hospital_generator.generate_hospital_records` to create synthetic hospital data.
-    3.  Iterates through the generated records and creates `Hospital` entities, populating the database.
-    4.  Logs the number of hospitals generated.
-
-### `db/hospital_generator.py` Module
-
-This module is responsible for generating synthetic hospital training data, which includes realistic hospital names, locations, types, insurance providers, ratings, and addresses. This data is used to populate the application's database for demonstration and testing purposes.
-
-**Constants:**
-
-*   **`HOSPITAL_SUFFIXES` (list)**: A list of common suffixes for hospital names (e.g., "Hospital", "Medical Center").
-*   **`CITY_ADDRESSES` (dict)**: A dictionary mapping cities to lists of street names within those cities, providing realistic address components.
-
-**Functions:**
-
-*   **`def generate_hospital_records(num_hospitals=150) -> list`**:
-    *   **Purpose**: Generates a specified number (`num_hospitals`) of synthetic hospital records.
-    *   **Parameters**:
-        *   `num_hospitals` (int): The total number of hospital records to generate. Defaults to 150.
-    *   **Process**:
-        1.  Iterates `num_hospitals` times, generating details for each hospital.
-        2.  Randomly selects a `city` from `settings.config.CITY_COORDINATES` and generates slightly varied `latitude` and `longitude` around the city's base coordinates.
-        3.  Randomly selects 1 to 3 `hospital_type` (specialties) and `insurance_providers` from `settings.config` lists.
-        4.  Constructs a `hospital_name` using the city, a selection of specialties, and a random `HOSPITAL_SUFFIX`.
-        5.  Assigns a random `rating` between 1.0 and 5.0.
-        6.  Generates a realistic `address` by combining a random street number, a street name pertinent to the chosen city (from `CITY_ADDRESSES`), and the city name.
-        7.  Appends the structured hospital record to a list.
-    *   **Returns**: A `list` of dictionaries, where each dictionary represents a complete synthetic hospital record.

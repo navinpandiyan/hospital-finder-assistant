@@ -20,17 +20,18 @@ The Voice Hospital Finder Bot is an interactive application that allows users to
 
 ## Features
 *   **Voice-Activated Interface**: Interact effortlessly through natural spoken language.
-*   **Intelligent Query Recognition**: Understands user intent, extracting location, hospital type, insurance details, the number of hospitals to search for (`n_hospitals`), and the search radius (`distance_km`) from spoken queries, with options for spaCy (default) or LLM-based recognition.
-*   **Accurate Hospital Search**: Finds and ranks hospitals by proximity and other specified criteria from an SQLite database.
+*   **Intelligent Query & Response Generation**: Understands various user intents and extracts relevant criteria using advanced Natural Language Understanding (NLU). This system is significantly enhanced by:
+    *   **Vector Database (Vectordb) for RAG**: Provides Retriever-Augmented Generation capabilities, allowing the bot to fetch contextually relevant information from a robust knowledge base to aid in query responses.
+    *   **Fine-tuned QLoRA based LLM**: Specialized in handling insurance queries and general intent recognition, this model works in conjunction with the RAG system to generate precise, context-aware responses, rather than merely recognizing intents.
+*   **Accurate Hospital Search**: Finds and ranks hospitals by proximity and other specified criteria, powered by an SQLite database.
 *   **Conversational Flow**: Manages chat context to ask clarifying questions, validating recognized entities (like location) and guiding users effectively.
 *   **Flexible Configuration**: Easily adjust language models, search parameters, and conversational behavior, including optional LLM usage for NLU and TTS dialogue refinement.
 
 ## Architecture Highlights
-The bot is built around a `langgraph` StateGraph, which dynamically manages the conversational flow. It integrates various AI models for voice processing and understanding, backed by custom tools for:
-*   Transcribing audio input using OpenAI Whisper.
-*   Recognizing entities (location, hospital type, insurance) from text using a configured Language Model.
-*   Converting text responses back to speech using OpenAI TTS.
-*   Performing detailed hospital lookups with distance calculations and intelligent scoring.
+The bot is built around a `langgraph` StateGraph, which dynamically manages the conversational flow, adeptly handling various user intents. While it integrates several AI models for voice processing and understanding, it is notably enhanced by:
+*   **Vector Database (Vectordb)**: Utilized for Retriever-Augmented Generation (RAG) capabilities, allowing the bot to fetch contextually relevant information from a robust knowledge base to aid in query responses.
+*   **Fine-tuned QLoRA based LLM**: Specifically trained on insurance queries, this model significantly improves the accuracy and relevance of responses related to insurance providers and policies.
+*   Custom tools for transcribing audio input using OpenAI Whisper, converting text responses back to speech using OpenAI TTS, and performing detailed hospital lookups with distance calculations and intelligent scoring.
 
 For an in-depth understanding of the architecture, state management, and core tools, please refer to the [Detailed Documentation](#detailed-documentation). You can view the architectural flowchart [here](https://excalidraw.com/#json=oW09Ru21JJKzaYMnwFm-C,1YmWJCb3bafyPVmYW73rCQ).
 
