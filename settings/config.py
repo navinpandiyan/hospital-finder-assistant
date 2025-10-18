@@ -197,4 +197,3 @@ LORA_TASK_TYPE = "CAUSAL_LM"
 USE_SAFETENSORS = True                         # Save model in safe serialization
 OPTIMIZER = "adamw_torch"
 GRADIENT_CHECKPOINTING = True                  # Save memory during training
-               # Optimizer for Trainer

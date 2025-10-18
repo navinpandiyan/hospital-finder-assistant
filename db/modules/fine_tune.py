@@ -11,33 +11,47 @@ from transformers import (
 )
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 
-# -----------------------------
-# Configuration
-# -----------------------------
-BASE_MODEL = "tiiuae/falcon-rw-1b"  # small, fast model for demo
-TOKENIZER_MODEL = BASE_MODEL
-FINE_TUNE_OUTPUT_DIR = "data/rag_llm"
+from settings.config import FINE_TUNE_OUTPUT_DIR
 
-# Training hyperparameters
-BATCH_SIZE = 2
-EPOCHS = 3
-LEARNING_RATE = 3e-4
-MAX_SEQ_LEN = 512
+# -----------------------------
+# Training Hyperparameters
+# -----------------------------
+BASE_MODEL = "mistralai/Mistral-7B-Instruct"   # Hugging Face Mistral instruct model
+TOKENIZER_MODEL = BASE_MODEL                    # Usually same as base model
 
-# Hardware/performance
-GRADIENT_ACCUMULATION_STEPS = 4
+BATCH_SIZE = 1                                 # Per-device batch size (lower for 7B models)
+EPOCHS = 3                                     # Fine-tuning epochs
+LEARNING_RATE = 2e-4                           # Learning rate
+MAX_SEQ_LEN = 512                               # Max token length for inputs
+
+# Gradient accumulation for effective batch size
+GRADIENT_ACCUMULATION_STEPS = 8               # Increase for memory-constrained GPUs
+
+# Mixed precision
 FP16 = True
 
-# Logging / checkpoints
-SAVE_STEPS = 100
-LOGGING_STEPS = 50
+# -----------------------------
+# Logging / Checkpoints
+# -----------------------------
+SAVE_STEPS = 50                                # Save checkpoint every N steps
+LOGGING_STEPS = 20                              # Log every N steps
 
-# LoRA / QLoRA config
-LORA_R = 4
-LORA_ALPHA = 16
-LORA_DROPOUT = 0.1
-TARGET_MODULES = ["query_key_value"] # ["q_proj", "v_proj"]  # attention projection layers
+# -----------------------------
+# QLoRA / LoRA Configuration
+# -----------------------------
+LOAD_IN_4BIT = True                            # 4-bit quantization
+LORA_R = 16
+LORA_ALPHA = 32
+LORA_DROPOUT = 0.05
+TARGET_MODULES = ["q_proj", "v_proj"]         # Mistral uses 'q_proj' and 'v_proj' in transformer layers
 LORA_TASK_TYPE = "CAUSAL_LM"
+
+# -----------------------------
+# Optional / Advanced
+# -----------------------------
+USE_SAFETENSORS = True                         # Save model in safe serialization
+OPTIMIZER = "adamw_torch"
+GRADIENT_CHECKPOINTING = True                  # Save memory during training
 
 # -----------------------------
 # Fine-tuning function
