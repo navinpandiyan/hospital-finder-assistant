@@ -107,39 +107,39 @@ class HospitalRAGRetriever:
         if not self.vector_db:
             raise RuntimeError("❌ Vector DB not loaded.")
         n_hospitals = user_input.get("n_hospitals", 5)
+        user_loc = user_input.get("user_loc", "")
         user_lat = user_input["user_lat"]
         user_lon = user_input["user_lon"]
-        max_distance = user_input.get("distance_km_radius", 300)
+        max_distance = user_input.get("distance_km_radius", 30000)
         intent = user_input.get("intent", "find_nearest")
         user_hospitals = user_input.get("hospital_names", [])
+        user_specialities = user_input.get("hospital_types", [])
         user_insurances = user_input.get("insurance_providers", [])
+        user_insurances = list(set(user_insurances).intersection(INSURANCE_PROVIDERS))
 
-        if intent in ["find_nearest", "find_best"] and user_input.get("user_loc", ""):
+        if user_loc or user_hospitals or user_specialities or user_insurances:
             query_text = self._build_query(user_input)
             k = int(n_hospitals + extra_results)
         else:
-            if not user_hospitals and len(set(user_insurances).intersection(INSURANCE_PROVIDERS)) < 1:
-                LOGGER.info("No RAG as No Hospital Names & Insurance Providers mentioned")
-                return []
-            query_text = user_input.get("user_query")
-            k = max(1, len(user_hospitals) + len(user_insurances))
+            return []
         
         top_docs = self.vector_db.similarity_search(query_text, k=k)
 
-        if intent not in ["find_nearest", "find_best"]:
-            filtered = [doc.metadata for doc in top_docs]                    
-            return filtered
+        if not user_loc:
+            return [doc.metadata for doc in top_docs]
+
+        filtered = []
+        for doc in top_docs:
+            meta = doc.metadata
+            dist = self._haversine_distance(user_lat, user_lon, meta["latitude"], meta["longitude"])
+            if intent not in ["find_nearest", "find_best"] or dist <= max_distance:
+                filtered.append({**meta, "distance_km": round(dist, 2)})
+
+        if intent == "find_best":
+            key_func = lambda x: (-x["rating"], x["distance_km"])
         else:
-            filtered = []
-            for doc in top_docs:
-                meta = doc.metadata
-                dist = self._haversine_distance(user_lat, user_lon, meta["latitude"], meta["longitude"])
-                if dist <= max_distance:
-                    filtered.append({**meta, "distance_km": round(dist, 2)})
-            if intent == "find_best":
-                return sorted(filtered, key=lambda x: (-x["rating"], x["distance_km"]))
-            else:
-                return sorted(filtered, key=lambda x: (x["distance_km"], -x["rating"]))
+            key_func = lambda x: (x["distance_km"], -x["rating"])
+        return sorted(filtered, key=key_func)
 
     # -----------------------------
     # Fine-tuned QLoRA grounding
@@ -184,7 +184,15 @@ class HospitalRAGRetriever:
     # Standard LLM grounding
     # -----------------------------
     async def ground_results(self, user_input: dict, retrieved_hospitals: List[dict]) -> RAGGroundedResponseModel:
-        if user_input.get("intent", "find_nearest") in ["find_nearest", "find_best"]:       
+        user_loc = user_input.get("user_loc", "")
+        user_hospitals = user_input.get("hospital_names", [])
+        user_specialities = user_input.get("hospital_types", [])
+        user_insurances = user_input.get("insurance_providers", [])
+        user_insurances = list(set(user_insurances).intersection(INSURANCE_PROVIDERS))
+        
+        # if user_input.get("intent", "find_nearest") in ["find_nearest", "find_best"]:  
+        if user_loc or user_hospitals or user_specialities or user_insurances:     
+        # if not GROUND_WITH_FINE_TUNE:
             if not retrieved_hospitals:
                 return RAGGroundedResponseModel(hospital_ids=[], dialogue="No hospitals found matching your criteria.")
         # if user_input.get("intent"):
@@ -205,7 +213,7 @@ class HospitalRAGRetriever:
                 specialties=", ".join(user_input.get("hospital_types", [])),
                 insurance_providers=", ".join(user_input.get("insurance_providers", [])),
                 n_hospitals=user_input.get("n_hospitals", 5),
-                distance_km_radius=user_input.get("distance_km_radius", 300),
+                distance_km_radius=user_input.get("distance_km_radius", 30000),
                 hospital_context=hospital_context
             )
 
@@ -243,7 +251,7 @@ async def rag_search_wrapper(
     hospital_names: Optional[str] = None,
     insurance_providers: Optional[List[str]] = None,
     n_hospitals: int = 5,
-    distance_km_radius: float = 300,
+    distance_km_radius: float = 30000,
     extra_results: int = 5,
 ) -> Tuple[List[dict], str]:
     
