@@ -29,7 +29,7 @@ async def find_hospitals_async(
     hospital_types: Optional[List[str]] = None,
     insurance_providers: Optional[List[str]] = None,
     n_hospitals: int = 5, # default is 5 hospitals
-    distance_km_radius: float = 300, # default is 300 kms
+    distance_km_radius: float = 30000, # default is 30000 kms
 ) -> List[dict]:
 
     loop = asyncio.get_running_loop()
@@ -110,7 +110,7 @@ async def hospital_lookup_wrapper(
     hospital_types: Optional[List[str]] = None,
     insurance_providers: Optional[List[str]] = None,
     n_hospitals: int = 5, # default is 5 hospitals
-    distance_km_radius: float = 300, # default is 300 kms
+    distance_km_radius: float = 30000, # default is 30000 kms
 ) -> List[dict]:
     """
     Wrapper around find_hospitals_async to lookup hospitals based on user's location,

@@ -167,7 +167,7 @@ async def summarize_conversation(final_state: HospitalFinderState):
     print(f"Recognized Intent: {recognition.get('intent', 'N/A')}")
     print(f"Recognized Location: {recognition.get('location', 'N/A')}")
     print(f"Number of Hospitals: {recognition.get('n_hospitals', 5)}")
-    print(f"Radius (km): {recognition.get('distance_km', 300)}")
+    print(f"Radius (km): {recognition.get('distance_km', 30000)}")
     print(f"Hospital Types: {', '.join(recognition.get('hospital_type', [])) or 'Any'}")
     print(f"Insurance: {', '.join(recognition.get('insurance', [])) or 'Any'}\n")
     
