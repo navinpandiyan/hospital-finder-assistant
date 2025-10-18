@@ -17,7 +17,7 @@ class LLMResponseModel(BaseModel):
     insurance: List[str] = Field(default_factory=list)
     provider_name: Optional[str] = None
     n_hospitals: Optional[int] = 5
-    distance_km: Optional[float] = 300
+    distance_km: Optional[float] = 30000
 
     
 # -----------------------------

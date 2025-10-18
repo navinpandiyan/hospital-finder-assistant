@@ -36,7 +36,7 @@ async def hospital_lookup_tool(
     hospital_types: Optional[List[str]] = None,
     insurance_providers: Optional[List[str]] = None,
     n_hospitals: int = 5, # default is 5 hospitals
-    distance_km_radius: float = 300, # default is 300 kms
+    distance_km_radius: float = 30000, # default is 30000 kms
 ) -> List[dict]:
     """
     Looks up hospitals in the database based on user's location, desired hospital types,
@@ -64,7 +64,7 @@ async def hospital_lookup_rag_tool(
     hospital_names: Optional[List[str]] = None,
     insurance_providers: Optional[List[str]] = None,
     n_hospitals: int = 5,  # default is 5 hospitals
-    distance_km_radius: float = 300,  # default is 300 kms
+    distance_km_radius: float = 30000,  # default is 30000 kms
     extra_results: int = 5
 ) -> Tuple[List[dict], str]:
     """
@@ -94,7 +94,7 @@ async def hospital_lookup_rag_tool(
     n_hospitals : int
         Number of top hospitals to return (default 5).
     distance_km_radius : float
-        Maximum distance in kilometers to filter hospitals (default 300 km).
+        Maximum distance in kilometers to filter hospitals (default 30000 km).
     extra_results : int
         Number of additional hospitals to retrieve from FAISS for better LLM grounding.
 
