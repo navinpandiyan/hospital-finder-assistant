@@ -120,6 +120,9 @@ class HospitalRAGRetriever:
         if user_loc or user_hospitals or user_specialities or user_insurances:
             query_text = self._build_query(user_input)
             k = int(n_hospitals + extra_results)
+            
+            if intent not in ["find_best", "find_nearest", "find_by_insurance"]:
+                k = n_hospitals
         else:
             return []
         
@@ -149,7 +152,7 @@ class HospitalRAGRetriever:
             raise RuntimeError("Fine-tuned model not loaded. Set GROUND_WITH_FINE_TUNE=True")
         
         hospital_context = "\n".join([
-            f"{h['hospital_id']}: {h['hospital_name']} located in {h['location']}, "
+            f"{h['hospital_name']} located in {h['location']}, "
             f"Specialties: {', '.join(h['hospital_type'])}, "
             f"Insurance accepted: {', '.join(h['insurance_providers'])}, "
             f"Rating: {h['rating']}"
@@ -169,7 +172,7 @@ class HospitalRAGRetriever:
                 **inputs,
                 max_new_tokens=128,         # still limits new tokens
                 do_sample=True,
-                temperature=0.1,
+                temperature=0.7,
                 top_p=0.9,
                 eos_token_id=self.tokenizer.eos_token_id
             )
