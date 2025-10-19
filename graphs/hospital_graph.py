@@ -77,30 +77,48 @@ graph.add_node("record_transcribe_recognize", record_transcribe_recognize)
 async def clarifier(state: HospitalFinderState):
     intent = (state.recognition or {}).get("intent")
     location = (state.recognition or {}).get("location")
-    
-    if ((location is not None) and (intent in ["find_nearest", "find_best", "find_by_insurance"])) or (intent not in ["find_nearest", "find_best", "find_by_insurance"]):
-        return state  # location already found
+    hospital_names = (state.recognition or {}).get("hospital_names", [])
+
+    # Determine if clarification is needed
+    needs_clarification = False
+
+    if intent in ["find_nearest", "find_best", "find_by_insurance"]:
+        needs_clarification = not location
+    elif intent == "compare_hospitals":
+        needs_clarification = len(hospital_names) < 2
+    # find_by_hospital assumed to have hospital name, no clarification
+
+    # If no clarification needed → proceed
+    if not needs_clarification:
+        return state
 
     if state.turn_count >= MAX_TURNS:
-        LOGGER.warning("Max turns reached without location.")
-        state.final_response = {"error": "Location not provided after multiple attempts."}
+        LOGGER.warning("Max turns reached without required info.")
+        state.final_response = {"error": "Required information not provided after multiple attempts."}
         state.user_wants_exit = True
         return state
 
+    # Build clarification prompt
     def build_clarifier_prompt(state: HospitalFinderState) -> str:
         hospital_types = state.recognition.get("hospital_type", [])
         insurance_providers = state.recognition.get("insurance", [])
 
-        parts = ["I didn't catch your location."]
-        if hospital_types:
-            parts.append(f"You mentioned looking for {' and '.join(hospital_types)} hospitals.")
-        if insurance_providers:
-            parts.append(f"You also mentioned insurance providers: {' and '.join(insurance_providers)}.")
+        parts = []
 
-        parts.append("Could you please tell me the city or area you're in?")
-        
+        if intent in ["find_nearest", "find_best", "find_by_insurance"]:
+            parts.append("I didn't catch your location.")
+            if hospital_types:
+                parts.append(f"You mentioned looking for {' and '.join(hospital_types)} hospitals.")
+            if insurance_providers:
+                parts.append(f"You also mentioned insurance providers: {' and '.join(insurance_providers)}.")
+            parts.append("Could you please tell me the city or area you're in?")
+
+        elif intent == "compare_hospitals":
+            parts.append("I didn't catch which hospitals you want to compare.")
+            parts.append("Could you please provide at least two hospital names?")
+
         return " ".join(parts)
-    
+
     question_text = build_clarifier_prompt(state)
     tts_result = await text_to_speech_tool.ainvoke({
         "text": question_text,
@@ -211,16 +229,40 @@ graph.add_node("generate_response", generate_response)
 # Conditional edges
 # ----------------------------
 def clarifier_conditional(state: HospitalFinderState):
+    """
+    Determine the next step based on the state and intent.
+    Returns a string flag indicating what is missing or next action.
+    """
     if getattr(state, "user_wants_exit", False):
         return "end_conversation"
-    if state.recognition.get("intent") in ["find_nearest", "find_best"]:
-        if state.recognition and state.recognition.get("location"):
+
+    intent = state.recognition.get("intent")
+    location = state.recognition.get("location")
+    hospital_names = state.recognition.get("hospital_names", [])
+
+    if intent in ["find_nearest", "find_best", "find_by_insurance"]:
+        if not location:
+            if state.turn_count >= MAX_TURNS:
+                return "max_turns_reached"
+            return "location_missing"
+        else:
             return "location_found"
-        if state.turn_count >= MAX_TURNS:
-            return "max_turns_reached"
-        return "location_missing"
-    else:
-        return "insurance_search"
+
+    elif intent == "compare_hospitals":
+        if len(hospital_names) < 2:
+            if state.turn_count >= MAX_TURNS:
+                return "max_turns_reached"
+            return "hospital_names_missing"
+        else:
+            return "hospital_names_found"
+
+    # For find_by_hospital, assumed hospital name is already provided
+    elif intent == "find_by_hospital":
+        return "hospital_names_found"
+
+    # Fallback
+    return "needs_clarification"
+
 
 graph.add_conditional_edges(
     "clarifier",
@@ -228,11 +270,14 @@ graph.add_conditional_edges(
     {
         "location_missing": "record_transcribe_recognize",
         "location_found": "find_hospitals",
-        "insurance_search": "find_hospitals",
+        "hospital_names_missing": "record_transcribe_recognize",
+        "hospital_names_found": "find_hospitals",
         "max_turns_reached": "generate_response",
-        "end_conversation": END
+        "end_conversation": END,
+        "needs_clarification": "record_transcribe_recognize"  # fallback
     }
 )
+
 
 # Conditional edge from first node to clarifier or END
 def record_conditional(state: HospitalFinderState):
