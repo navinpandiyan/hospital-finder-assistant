@@ -58,9 +58,16 @@ def fine_tune_insurance_llm(data_path: str = "db/insurance_data.json"):
     for item in raw_data:
         context = item.pop("context", {})
         if isinstance(context, dict):
-            context_str = ", ".join(
-                f"{k}:{'|'.join(v) if isinstance(v, list) else v}" for k, v in context.items()
+            context_str = (
+                f"{context['hospital_name']} located in {context['location']}, "
+                f"Specialties: {', '.join(context['hospital_type']) if isinstance(context['hospital_type'], list) else context['hospital_type']}, "
+                f"Insurance accepted: {', '.join(context['insurance_providers'])}, "
+                f"Rating: {context['rating']}, "
+                f"Distance: {context['distance_km']} km"
             )
+            # context_str = ", ".join(
+            #     f"{k}:{'|'.join(v) if isinstance(v, list) else v}" for k, v in context.items()
+            # )
         else:
             context_str = str(context)
         item["context"] = context_str
