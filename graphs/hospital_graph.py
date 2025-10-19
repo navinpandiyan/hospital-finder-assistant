@@ -151,7 +151,7 @@ async def find_hospitals(state: HospitalFinderState):
         distance_km = DEFAULT_DISTANCE_KM
     
     if LOOKUP_MODE == "simple":
-        hospitals = await hospital_lookup_tool.ainvoke({
+        selected_hospitals = await hospital_lookup_tool.ainvoke({
             "user_lat": user_lat,
             "user_lon": user_lon,
             "intent": state.recognition.get("intent", "find_nearest"),
@@ -162,13 +162,13 @@ async def find_hospitals(state: HospitalFinderState):
         })
         
         # --- Generate hospital list response ---
-        if not hospitals:
+        if not selected_hospitals:
             response_text = "I couldn't find any hospitals matching your criteria."
         else:
             hospital_list = "\n".join([f"- {h['hospital_name']} ({h['distance_km']:.2f} km away)" 
-                                    for h in hospitals])
+                                    for h in selected_hospitals])
             response_text = f"Hospitals near you:\n{hospital_list}"
-        
+        retrieved_hospitals = selected_hospitals
     elif LOOKUP_MODE == "rag":
         retrieved_hospitals, selected_hospitals, response_text = await hospital_lookup_rag_tool.ainvoke({
             "user_query": user_query,
