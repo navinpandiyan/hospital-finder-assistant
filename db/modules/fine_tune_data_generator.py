@@ -47,7 +47,7 @@ TERM_QUERIES = [
 # Fine-Tuning Generator
 # -----------------------------
 # Conversational fine-tuning generator
-def generate_insurance_fine_tuning_data_dialogue(hospitals, hospital_insurance_links, num_samples_per_hospital=15):
+def generate_insurance_fine_tuning_data_dialogue(hospitals, hospital_insurance_links, num_samples_per_hospital=3):
     fine_tuning_examples = []
 
     # Map hospital_id -> list of insurance plans
