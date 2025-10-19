@@ -60,11 +60,10 @@ def fine_tune_insurance_llm(data_path: str = "db/insurance_data.json"):
         if isinstance(context, dict):
             if "hospital_name" in context.keys():
                 context_str = (
-                    f"{context['hospital_name']} located in {context['location']}, "
-                    f"Specialties: {', '.join(context['hospital_type']) if isinstance(context['hospital_type'], list) else context['hospital_type']}, "
-                    f"Insurance accepted: {', '.join(context['insurance_providers'])}, "
-                    f"Rating: {context['rating']}"
-                )
+                f"{context['hospital_name']} located in {context['location']}, "
+                f"Specialties: {', '.join(context['hospital_type']) if isinstance(context['hospital_type'], list) else context['hospital_type']}, "
+                f"Rating: {context['rating']}"
+            )
             else:
                 context_str = ""
             # context_str = ", ".join(
@@ -103,7 +102,7 @@ def fine_tune_insurance_llm(data_path: str = "db/insurance_data.json"):
     model = AutoModelForCausalLM.from_pretrained(
         BASE_MODEL,
         quantization_config=bnb_config,
-        device_map="cuda:0",                  # Automatically spread across GPU/CPU
+        device_map="auto",                  # Automatically spread across GPU/CPU - cuda:0
         low_cpu_mem_usage=True
     )
 
