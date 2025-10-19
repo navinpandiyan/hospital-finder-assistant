@@ -29,7 +29,7 @@ async def main():
     # --- Step 4: Enter chat room animation ---
     print("\n💬 Entering chat room...")
     await asyncio.sleep(1)
-    print("Hello! I am your hospital assistant. How can I help you today?\n")
+    print("Bot: Hello! I am your hospital assistant. How can I help you today?")
 
     # --- Step 5: Run LangGraph ---
     final_state = await hospital_finder_graph.ainvoke(state)
