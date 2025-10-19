@@ -78,7 +78,7 @@ async def clarifier(state: HospitalFinderState):
     intent = (state.recognition or {}).get("intent")
     location = (state.recognition or {}).get("location")
     
-    if ((location is not None) and (intent in ["find_nearest", "find_best"])) or (intent not in ["find_nearest", "find_best"]):
+    if ((location is not None) and (intent in ["find_nearest", "find_best", "find_by_insurance"])) or (intent not in ["find_nearest", "find_best", "find_by_insurance"]):
         return state  # location already found
 
     if state.turn_count >= MAX_TURNS:
