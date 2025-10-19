@@ -2,12 +2,24 @@ from dotenv import load_dotenv
 import spacy
 import logging
 
-# Load Environment Variables
+# ----------------------------
+# App Mode
+# ----------------------------
+MODE = "voicebot"  # or "voicebot"
+
+# Load environment variables
 load_dotenv()
 
-# Logging Configuration & Initialization
-logging.basicConfig(level=logging.INFO)
-LOGGER = logging.getLogger("uvicorn.logger")
+# ----------------------------
+# Logging Configuration
+# ----------------------------
+if MODE == "chatbot" or MODE == "voicebot":
+    # Disable all logging output
+    logging.disable(logging.CRITICAL)
+    LOGGER = logging.getLogger("app.log")
+else:
+    logging.basicConfig(level=logging.INFO)
+    LOGGER = logging.getLogger("app.log")
 
 # Load spaCy NER Model
 try:
@@ -142,6 +154,7 @@ LOOKUP_MODE = "rag" # "simple" / "rag"
 RAG_GROUNDER_MODEL = "google/gemini-2.0-flash-001"
 RAG_GROUNDER_TEMPERATURE = 0.1
 GROUND_WITH_FINE_TUNE = True
+
 
 # -----------------------------
 # -----------------------------
