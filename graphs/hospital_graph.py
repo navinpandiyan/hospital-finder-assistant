@@ -170,7 +170,7 @@ async def find_hospitals(state: HospitalFinderState):
             response_text = f"Hospitals near you:\n{hospital_list}"
         
     elif LOOKUP_MODE == "rag":
-        hospitals, response_text = await hospital_lookup_rag_tool.ainvoke({
+        retrieved_hospitals, selected_hospitals, response_text = await hospital_lookup_rag_tool.ainvoke({
             "user_query": user_query,
             "user_loc": user_loc,
             "user_lat": user_lat,
@@ -184,7 +184,7 @@ async def find_hospitals(state: HospitalFinderState):
             "extra_results": 5
         })
         
-    state.hospitals_found = hospitals
+    state.hospitals_found = {"retrieved": retrieved_hospitals, "selected": selected_hospitals}
     state.final_response_text = response_text
     return state
 
