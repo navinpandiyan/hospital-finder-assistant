@@ -8,18 +8,6 @@ pd.options.mode.chained_assignment = None  # default='warn'
 from settings.config import LOGGER
 
 # -----------------------------
-# Helper for distance calculation (Haversine formula)
-# -----------------------------
-def haversine_distance(lat1, lon1, lat2, lon2):
-    R = 6371  # Radius of Earth in kilometers
-    lat1_rad, lon1_rad = math.radians(lat1), math.radians(lon1)
-    lat2_rad, lon2_rad = math.radians(lat2), math.radians(lon2)
-    dlon, dlat = lon2_rad - lon1_rad, lat2_rad - lat1_rad
-    a = math.sin(dlat / 2)**2 + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(dlon / 2)**2
-    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
-    return R * c
-
-# -----------------------------
 # Hospital Search Function
 # -----------------------------
 async def find_hospitals_async(
