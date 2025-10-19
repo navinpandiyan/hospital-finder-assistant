@@ -62,7 +62,7 @@ class HospitalRAGRetriever:
         self.tokenizer = AutoTokenizer.from_pretrained(FINE_TUNE_MODEL_PATH, use_fast=True)
         self.model = AutoModelForCausalLM.from_pretrained(
             FINE_TUNE_MODEL_PATH,
-            device_map="auto",
+            device_map="cuda:0",
             torch_dtype=torch.bfloat16 if torch.cuda.is_available() else torch.float32
         )
         # Wrap with PEFT if necessary
@@ -144,26 +144,23 @@ class HospitalRAGRetriever:
     # -----------------------------
     # Fine-tuned QLoRA grounding
     # -----------------------------
-    async def ground_with_insurance_info_qlora(self, user_query: str, hospitals_context: List[dict]) -> str:
+    async def ground_with_insurance_info_qlora(self, user_query: str, retrieved_hospitals: List[dict]) -> str:
         if not hasattr(self, "model"):
             raise RuntimeError("Fine-tuned model not loaded. Set GROUND_WITH_FINE_TUNE=True")
         
-        if hospitals_context:
-            hospital_data = "\n".join([
-                f"- {h['hospital_name']} ({h['location']}) | "
-                f"Specialties: {', '.join(h['hospital_type']) or 'N/A'} | "
-                f"Insurance Providers: {', '.join(h['insurance_providers']) or 'N/A'} | "
-                f"Rating: {h.get('rating', 'N/A')}"
-                for h in hospitals_context
-            ])
-            context_section = f"\n\n### Context:\n{hospital_data}"
-        else:
-            context_section = ""
+        hospital_context = "\n".join([
+            f"{h['hospital_id']}: {h['hospital_name']} located in {h['location']}, "
+            f"Specialties: {', '.join(h['hospital_type'])}, "
+            f"Insurance accepted: {', '.join(h['insurance_providers'])}, "
+            f"Rating: {h['rating']}, Distance: {h.get('distance_km', 'N/A')} km"
+            for h in retrieved_hospitals
+        ])
 
+        
         prompt = (
-            f"### Instruction:\n{user_query.strip()}\n"
-            f"{context_section}\n\n"
-            "### Response:"
+            f"### Instruction:\n{user_query.strip()}\n\n"
+            f"### Context:\n{hospital_context}\n\n"
+            f"### Response:\n"
         )
         
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
@@ -191,11 +188,11 @@ class HospitalRAGRetriever:
         user_insurances = list(set(user_insurances).intersection(INSURANCE_PROVIDERS))
         
         # if user_input.get("intent", "find_nearest") in ["find_nearest", "find_best"]:  
-        if user_loc or user_hospitals or user_specialities or user_insurances:     
-        # if not GROUND_WITH_FINE_TUNE:
+        # if user_loc or user_hospitals or user_specialities or user_insurances:     
+        # if user_input.get("intent"):
+        if not GROUND_WITH_FINE_TUNE:
             if not retrieved_hospitals:
                 return RAGGroundedResponseModel(hospital_ids=[], dialogue="No hospitals found matching your criteria.")
-        # if user_input.get("intent"):
             hospital_context = "\n".join([
                 f"{h['hospital_id']}: {h['hospital_name']} located in {h['location']}, "
                 f"Specialties: {', '.join(h['hospital_type'])}, "
