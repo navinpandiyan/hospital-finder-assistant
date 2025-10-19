@@ -12,7 +12,6 @@ Select the intent based on the user’s request:
 - "find_nearest": User asks for nearby hospitals (e.g., "Find the nearest cardiology hospital in Abu Dhabi").
 - "find_best": User asks for top-rated or best hospitals.
 - "find_by_insurance": User asks for hospitals that accept or are covered by a specific insurance provider.
-- "get_insurance_coverage": User asks which insurance plans are accepted by a specific hospital (e.g., "Which insurance plans does Aster Hospital accept?").
 - "find_by_hospital": User asks for information about a specific hospital (e.g., "What insurance does ABC Hospital cover?", "What does ABC Hospital specialize in?").
 - "compare_hospitals": User compares hospitals or providers (e.g., "Compare Burjeel vs Aster hospitals").
 - "exit": User indicates they want to stop, end, or close the conversation (e.g., "thank you", "that's all", "stop", "exit", "bye").
@@ -102,7 +101,7 @@ Output:
 Output:
 {{
   "query": "which insurance plans does fujairah hepatology & hematology diagnostic center accept from gulf insurance?",
-  "intent": "get_insurance_coverage",
+  "intent": "find_by_hospital",
   "location": "fujairah",
   "hospital_names": ["fujairah hepatology & hematology diagnostic center"],
   "hospital_type": [],
