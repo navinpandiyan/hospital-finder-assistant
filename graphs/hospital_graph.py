@@ -211,7 +211,7 @@ async def generate_response(state: HospitalFinderState):
         })
         await play_audio(tts_result["audio_path"])
         state.final_response_audio_path = tts_result["audio_path"]
-        await summarize_conversation(state)
+        # await summarize_conversation(state)
     
     await save_state(state)
 
