@@ -9,7 +9,7 @@ class LLMResponseModel(BaseModel):
     query: str
     intent: str = Field(
         default="find_nearest",
-        description="Intent type: find_nearest | find_best | find_by_insurance | find_by_provider | get_insurance_coverage"
+        description="Intent type: find_nearest | find_best | find_by_insurance | find_by_hospital"
     )
     location: Optional[str] = None
     hospital_names: Optional[List[str]] = None
