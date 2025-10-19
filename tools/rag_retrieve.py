@@ -220,7 +220,7 @@ class HospitalRAGRetriever:
         user_insurances = user_input.get("insurance_providers", [])
         user_insurances = list(set(user_insurances).intersection(INSURANCE_PROVIDERS))
         
-        if user_input.get("intent", "find_nearest") not in ["find_by_hospital", "find_by_insurance"]:  
+        if user_input.get("intent", "find_nearest") not in ["find_by_hospital"]:  
         # if user_input.get("intent", "find_nearest"):  
         # if not GROUND_WITH_FINE_TUNE:  
             LOGGER.info(f"RAG Grounding: {RAG_GROUNDER_MODEL}")
@@ -260,7 +260,7 @@ class HospitalRAGRetriever:
             response_parsed = response.choices[0].message.parsed
             return response_parsed
         
-        else: #Use QLoRA Model if find_by_insurance / find_by_hospital
+        else: #Use QLoRA Model if find_by_hospital
             LOGGER.info(f"RAG Grounding: QLoRA Model")
             response = await self.ground_with_insurance_info_qlora(user_input.get("user_query", ""), retrieved_hospitals)
             result = RAGGroundedResponseModel(hospital_ids=[h['hospital_id'] for h in retrieved_hospitals], dialogue=response)
