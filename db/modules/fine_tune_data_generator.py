@@ -1,9 +1,10 @@
-# db/fine_tune_hospital_insurance_generator.py
+# db/modules/fine_tune_data_generator.py
+import asyncio
 import json
-import random
 import os
-from itertools import combinations
+import random
 from settings.config import LOGGER, FINE_TUNE_DATA_PATH
+from tools.text_to_speech import text_to_dialogue
 
 # -----------------------------
 # Domain-Specific Terms
@@ -21,20 +22,11 @@ DOMAIN_SPECIFIC_TERMS = {
     "network hospital": "A hospital that has an active tie-up with an insurance provider for cashless or direct billing services."
 }
 
-# -----------------------------
-# Instruction templates
-# -----------------------------
 HOSPITAL_QUERIES = [
-    "What insurance plans are accepted at {hospital_name}?",
     "Which providers are linked to {hospital_name}?",
-    "What specialties does {hospital_name} offer?",
-    "Tell me about {hospital_name}'s services and coverage options."
-]
-
-COMPARISON_QUERIES = [
-    "Compare {hospital_a} and {hospital_b}.",
-    "Which hospital is better — {hospital_a} or {hospital_b}?",
-    "Differences between {hospital_a} and {hospital_b}."
+    "Tell me which insurance plans are accepted at {hospital_name}.",
+    "Can you list the insurance options for {hospital_name}?",
+    "What insurance coverage is available at {hospital_name}?"
 ]
 
 TERM_QUERIES = [
@@ -50,38 +42,48 @@ TERM_QUERIES = [
 def generate_insurance_fine_tuning_data_dialogue(hospitals, hospital_insurance_links, num_samples_per_hospital=3):
     fine_tuning_examples = []
 
-    # Map hospital_id -> list of insurance plans
+    # Map hospital_id -> list of linked insurance plans
     hospital_to_plans = {}
     for link in hospital_insurance_links:
         hospital_to_plans.setdefault(link.hospital.hospital_id, []).append(link.insurance_plan)
 
-    # Dialogue-style queries
-    HOSPITAL_QUERIES = [
-        "Which providers are linked to {hospital_name}?",
-        "Tell me which insurance plans are accepted at {hospital_name}.",
-        "Can you list the insurance options for {hospital_name}?",
-        "What insurance coverage is available at {hospital_name}?"
-    ]
-
     for hospital in hospitals:
         linked_plans = hospital_to_plans.get(hospital.hospital_id, [])
-        plan_texts = [
-            f"{p.plan_name} by {p.provider_name}" for p in linked_plans
-        ]
-        plan_sentence = ", ".join(plan_texts) if plan_texts else "no insurance plans currently available"
-        
+
         for _ in range(num_samples_per_hospital):
+            # Choose instruction
             instr = random.choice(HOSPITAL_QUERIES).format(hospital_name=hospital.hospital_name)
-            
-            # Dialogue-style response
+
+            # Select 1–2 domain-specific terms for grounding
+            selected_terms = random.sample(list(DOMAIN_SPECIFIC_TERMS.keys()), k=random.randint(1, 2))
+            terms_text = "; ".join([f"'{t}': {DOMAIN_SPECIFIC_TERMS[t]}" for t in selected_terms])
+
+            # Construct Insurance Details section from linked plans
+            insurance_details_lines = []
+            for p in linked_plans:
+                line = (
+                    f"Plan Name: {p.plan_name}\n"
+                    f"Provider: {p.provider_name}\n"
+                    f"Policy Terms: {p.policy_terms}\n"
+                    f"Coverage Details: {p.coverage_details}\n"
+                    f"Network Type: {p.network_type}\n"
+                    f"Rating: {p.rating}\n"
+                )
+                insurance_details_lines.append(line)
+            insurance_details_text = "\n---\n".join(insurance_details_lines) if insurance_details_lines else "No insurance plans available."
+
+            # Construct response with Hospital Details + Insurance Details
             response = (
-                f"{hospital.hospital_name}, located in {hospital.location}, offers {hospital.hospital_type} services. "
-                f"It has a rating of {hospital.rating}. "
-                f"The hospital works with several insurance providers including {plan_sentence}. "
-                f"Patients can check with the hospital for plan-specific benefits such as cashless facilities, coverage details, and network hospitals."
+                f"Hospital Details:\n"
+                f"Name: {hospital.hospital_name}\n"
+                f"Location: {hospital.location}\n"
+                f"Services: {hospital.hospital_type}\n"
+                f"Rating: {hospital.rating}\n\n"
+                f"Insurance Details:\n{insurance_details_text}\n\n"
+                f"Additional Info: {terms_text}"
             )
 
-            # Lean context
+            # Context for reference
             context = {
                 "hospital_id": hospital.hospital_id,
                 "hospital_name": hospital.hospital_name,
@@ -97,7 +99,7 @@ def generate_insurance_fine_tuning_data_dialogue(hospitals, hospital_insurance_l
                 "response": response
             })
 
-    # Add domain-specific terms for grounding
+    # Add domain-specific terms as separate instructions
     for term, definition in DOMAIN_SPECIFIC_TERMS.items():
         instr = random.choice(TERM_QUERIES).format(term=term)
         fine_tuning_examples.append({
@@ -106,10 +108,23 @@ def generate_insurance_fine_tuning_data_dialogue(hospitals, hospital_insurance_l
             "response": definition
         })
 
+    # Async function to convert all responses to dialogue
+    async def convert_all_to_dialogue(fine_tuning_examples):
+        async def process_item(item):
+            dialogue_result = await text_to_dialogue(item["response"])
+            item["response"] = dialogue_result.dialogue
+            return item
+
+        tasks = [process_item(item) for item in fine_tuning_examples]
+        updated_examples = await asyncio.gather(*tasks)
+        return updated_examples
+
+    # Run async conversion
+    fine_tuning_examples = asyncio.run(convert_all_to_dialogue(fine_tuning_examples))
+
     # Save JSONL
     os.makedirs(os.path.dirname(FINE_TUNE_DATA_PATH), exist_ok=True)
     with open(FINE_TUNE_DATA_PATH, "w", encoding="utf-8") as f:
         json.dump(fine_tuning_examples, f, indent=4)
 
-    LOGGER.info(f"Generated {len(fine_tuning_examples)} conversational fine-tuning examples at {FINE_TUNE_DATA_PATH}")
-    return fine_tuning_examples
+    LOGGER.info(f"Converted all examples to dialogue and saved {len(fine_tuning_examples)} items at {FINE_TUNE_DATA_PATH}")
