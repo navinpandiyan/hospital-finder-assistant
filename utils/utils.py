@@ -2,6 +2,9 @@ import json
 import time
 import asyncio
 import os
+import wave
+
+import pyaudio
 from settings.config import LOGGER
 from db.models import HospitalFinderState
 from geopy.geocoders import Nominatim
