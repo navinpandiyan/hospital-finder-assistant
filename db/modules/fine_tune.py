@@ -63,6 +63,7 @@ def fine_tune_insurance_llm(data_path: str = "db/insurance_data.json"):
                 f"{context['hospital_name']} located in {context['location']}, "
                 f"Specialties: {', '.join(context['hospital_type']) if isinstance(context['hospital_type'], list) else context['hospital_type']}, "
                 f"Rating: {context['rating']}"
+                f"Insurance accepted: {', '.join(context['insurance_providers'])}"
             )
             else:
                 context_str = ""
