@@ -37,7 +37,7 @@ class HospitalFinderState(BaseModel):
     clarify_transcription: Optional[dict] = None
     clarify_recognition: Optional[dict] = None
 
-    hospitals_found: Optional[List[dict]] = None
+    hospitals_found: Optional[dict] = {}
     clarify_bot_response_audio_path: Optional[str] = None
     turn_count: int = 0
     last_question: Optional[str] = None
