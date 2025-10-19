@@ -62,7 +62,7 @@ class HospitalRAGRetriever:
         self.tokenizer = AutoTokenizer.from_pretrained(FINE_TUNE_MODEL_PATH, use_fast=True)
         self.model = AutoModelForCausalLM.from_pretrained(
             FINE_TUNE_MODEL_PATH,
-            device_map="cuda:0",
+            device_map="auto",
             torch_dtype=torch.bfloat16 if torch.cuda.is_available() else torch.float32
         )
         # Wrap with PEFT if necessary
@@ -154,12 +154,10 @@ class HospitalRAGRetriever:
         hospital_context = "\n".join([
             f"{h['hospital_name']} located in {h['location']}, "
             f"Specialties: {', '.join(h['hospital_type'])}, "
-            f"Insurance accepted: {', '.join(h['insurance_providers'])}, "
             f"Rating: {h['rating']}"
             for h in retrieved_hospitals
         ])
 
-        
         prompt = (
             f"### Instruction:\n{user_query.strip()}\n\n"
             f"### Context:\n{hospital_context}\n\n"
@@ -170,15 +168,16 @@ class HospitalRAGRetriever:
         with torch.no_grad():
             output_ids = self.model.generate(
                 **inputs,
-                max_new_tokens=128,         # still limits new tokens
+                max_new_tokens=256,         # allow more room for detailed response
                 do_sample=True,
                 temperature=0.7,
                 top_p=0.9,
                 eos_token_id=self.tokenizer.eos_token_id
             )
         response_text = self.tokenizer.decode(output_ids[0], skip_special_tokens=True)
-        response = response_text.split("Response:")[-1].split("\n\n")[0].strip()
+        response = response_text.split("### Response:\n")[-1].strip()
         return response
+
     
     # -----------------------------
     # Standard LLM grounding
