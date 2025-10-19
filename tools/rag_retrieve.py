@@ -185,18 +185,18 @@ class HospitalRAGRetriever:
             prompt,
             return_tensors="pt",
             truncation=True,
-            max_length=512,
+            max_length=192,
             padding="longest"
         ).to(self.device)
 
         # Enable faster inference: disable gradients, enable caching, and use half precision
-        with torch.inference_mode():  # slightly faster than no_grad()
+        with torch.inference_mode(), torch.amp.autocast(device_type="cuda", dtype=torch.bfloat16):  # slightly faster than no_grad()
             output_ids = self.model.generate(
                 **inputs,
-                max_new_tokens=256,         # keep response concise
-                do_sample=True,
-                temperature=0.5,
-                top_p=0.9,
+                max_new_tokens=192,         # keep response concise
+                do_sample=False,
+                # temperature=0.5,
+                # top_p=0.9,
                 use_cache=True,             # enables past_key_values cache
                 pad_token_id=self.tokenizer.eos_token_id
             )
@@ -318,12 +318,12 @@ if __name__ == "__main__":
     retriever = HospitalRAGRetriever()
 
     test_input = {
-        'user_query': "Can you list the insurance options for Al Awir Dental Hospital? Do they accept Direct Billing?", 
+        'user_query': "Can you list the insurance options for Abu Dhabi Sleep Medicine Medical Plaza?", 
         'user_loc': "", 
         'user_lat': None, 
         'user_lon': None, 
         'intent': "find_by_hospital", 
-        'hospital_names': ["Al Awir Dental Hospital"], 
+        'hospital_names': ["Abu Dhabi Sleep Medicine Medical Plaza"], 
         'hospital_types': [], 
         'insurance_providers': [], 
         'n_hospitals': 1, 
