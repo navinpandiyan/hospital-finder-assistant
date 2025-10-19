@@ -1,4 +1,4 @@
-# db/fine_tune_peft.py
+# db/fine_tune_peft_windows.py
 import json
 import torch
 from datasets import Dataset
@@ -7,10 +7,10 @@ from transformers import (
     AutoModelForCausalLM,
     Trainer,
     TrainingArguments,
-    DataCollatorForLanguageModeling
+    DataCollatorForLanguageModeling,
+    BitsAndBytesConfig,
 )
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
-
 from settings.config import FINE_TUNE_OUTPUT_DIR
 
 # -----------------------------
@@ -43,34 +43,24 @@ LOAD_IN_4BIT = True                            # 4-bit quantization
 LORA_R = 16
 LORA_ALPHA = 32
 LORA_DROPOUT = 0.05
-TARGET_MODULES = ["q_proj", "v_proj"]         # Mistral uses 'q_proj' and 'v_proj' in transformer layers
+TARGET_MODULES = ["q_proj", "v_proj"]
 LORA_TASK_TYPE = "CAUSAL_LM"
 
 # -----------------------------
-# Optional / Advanced
-# -----------------------------
-USE_SAFETENSORS = True                         # Save model in safe serialization
-OPTIMIZER = "adamw_torch"
-GRADIENT_CHECKPOINTING = True                  # Save memory during training
-
-# -----------------------------
-# Fine-tuning function
+# Fine-tuning function (QLoRA)
 # -----------------------------
 def fine_tune_insurance_llm(data_path: str = "db/insurance_data.json"):
     print(f"🚀 Loading dataset from: {data_path}")
     with open(data_path, "r", encoding="utf-8") as f:
         raw_data = json.load(f)
 
-    # Flatten 'context' field
+    # Flatten 'context' into string
     for item in raw_data:
         context = item.pop("context", {})
         if isinstance(context, dict):
             context_str = ", ".join(
-                f"{k}:{'|'.join(v) if isinstance(v, list) else v}" 
-                for k, v in context.items()
+                f"{k}:{'|'.join(v) if isinstance(v, list) else v}" for k, v in context.items()
             )
-        elif isinstance(context, list):
-            context_str = ", ".join(str(c) for c in context)
         else:
             context_str = str(context)
         item["context"] = context_str
@@ -88,26 +78,33 @@ def fine_tune_insurance_llm(data_path: str = "db/insurance_data.json"):
     dataset = dataset.map(format_prompt)
 
     # -----------------------------
-    # Load model & tokenizer
+    # Load model & tokenizer (QLoRA)
     # -----------------------------
-    print(f"📦 Loading base model: {BASE_MODEL}")
+    print(f"📦 Loading base model in 4-bit mode (QLoRA): {BASE_MODEL}")
     tokenizer = AutoTokenizer.from_pretrained(TOKENIZER_MODEL, use_fast=True)
     tokenizer.pad_token = tokenizer.eos_token
 
-    model = AutoModelForCausalLM.from_pretrained(
-        BASE_MODEL,
-        device_map="auto",
-        torch_dtype=torch.bfloat16
+    bnb_config = BitsAndBytesConfig(
+        load_in_4bit=LOAD_IN_4BIT,                  # ✅ Quantized 4-bit weights
+        bnb_4bit_use_double_quant=True,
+        bnb_4bit_quant_type="nf4",          # NormalFloat4 (best for QLoRA)
+        bnb_4bit_compute_dtype=torch.float16 if torch.cuda.is_available() else torch.float32
     )
 
-    # -----------------------------
-    # Prepare model for k-bit training (QLoRA)
-    # -----------------------------
-    model = prepare_model_for_kbit_training(model)
+    model = AutoModelForCausalLM.from_pretrained(
+        BASE_MODEL,
+        quantization_config=bnb_config,
+        device_map="cuda:0",                  # Automatically spread across GPU/CPU
+        low_cpu_mem_usage=True
+    )
+
+    model.gradient_checkpointing_enable()
 
     # -----------------------------
-    # Configure LoRA with PEFT
+    # Prepare model for QLoRA
     # -----------------------------
+    model = prepare_model_for_kbit_training(model)
+    
     lora_config = LoraConfig(
         r=LORA_R,
         lora_alpha=LORA_ALPHA,
@@ -118,7 +115,7 @@ def fine_tune_insurance_llm(data_path: str = "db/insurance_data.json"):
     )
 
     model = get_peft_model(model, lora_config)
-    print(f"✅ LoRA layers added via PEFT to {TARGET_MODULES}")
+    print(f"✅ QLoRA layers added via PEFT to {TARGET_MODULES}")
 
     # -----------------------------
     # Tokenization
@@ -169,9 +166,10 @@ def fine_tune_insurance_llm(data_path: str = "db/insurance_data.json"):
     print(f"💾 Saving fine-tuned model to {FINE_TUNE_OUTPUT_DIR}...")
     model.save_pretrained(FINE_TUNE_OUTPUT_DIR)
     tokenizer.save_pretrained(FINE_TUNE_OUTPUT_DIR)
-    print("✅ Fine-tuning complete!")
+    print("✅ QLoRA fine-tuning complete!")
 
     return FINE_TUNE_OUTPUT_DIR
+
 
 # Optional CLI
 if __name__ == "__main__":
