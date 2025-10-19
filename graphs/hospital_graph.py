@@ -18,7 +18,8 @@ from settings.config import (
     USE_LLM_FOR_RECOGNITION,
     LOOKUP_MODE
 )
-from utils.utils import play_audio, record_audio, save_state, summarize_conversation
+from utils.utils import play_audio, save_state, summarize_conversation
+from tools.record import record_audio
 
 graph = StateGraph(HospitalFinderState)
 
