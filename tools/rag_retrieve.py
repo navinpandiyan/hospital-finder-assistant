@@ -193,9 +193,9 @@ class HospitalRAGRetriever:
         with torch.inference_mode():  # slightly faster than no_grad()
             output_ids = self.model.generate(
                 **inputs,
-                max_new_tokens=int(32*len(retrieved_hospitals)),         # keep response concise
+                max_new_tokens=256,         # keep response concise
                 do_sample=True,
-                temperature=0.9,
+                temperature=0.5,
                 top_p=0.9,
                 use_cache=True,             # enables past_key_values cache
                 pad_token_id=self.tokenizer.eos_token_id
@@ -220,8 +220,9 @@ class HospitalRAGRetriever:
         user_insurances = user_input.get("insurance_providers", [])
         user_insurances = list(set(user_insurances).intersection(INSURANCE_PROVIDERS))
         
-        # if user_input.get("intent", "find_nearest") in ["find_nearest", "find_best", "compare_hospitals"]:  
-        if user_input.get("intent", "find_nearest"):  
+        if user_input.get("intent", "find_nearest") not in ["find_by_hospital", "find_by_insurance"]:  
+        # if user_input.get("intent", "find_nearest"):  
+        # if not GROUND_WITH_FINE_TUNE:  
             LOGGER.info(f"RAG Grounding: {RAG_GROUNDER_MODEL}")
             if not retrieved_hospitals:
                 return RAGGroundedResponseModel(hospital_ids=[], dialogue="No hospitals found matching your criteria.")
@@ -317,12 +318,12 @@ if __name__ == "__main__":
     retriever = HospitalRAGRetriever()
 
     test_input = {
-        'user_query': "Which insurance plans are accepted at Huwaylat Dermatology Health Institute?", 
+        'user_query': "Can you list the insurance options for Al Awir Dental Hospital? Do they accept Direct Billing?", 
         'user_loc': "", 
         'user_lat': None, 
         'user_lon': None, 
         'intent': "find_by_hospital", 
-        'hospital_names': ["Huwaylat Dermatology Health Institute"], 
+        'hospital_names': ["Al Awir Dental Hospital"], 
         'hospital_types': [], 
         'insurance_providers': [], 
         'n_hospitals': 1, 
