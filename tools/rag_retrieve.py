@@ -59,18 +59,28 @@ class HospitalRAGRetriever:
     # -----------------------------
     def _load_finetuned_model(self):
         LOGGER.info(f"📦 Loading fine-tuned LLM from {FINE_TUNE_MODEL_PATH}")
+
+        # Load tokenizer
         self.tokenizer = AutoTokenizer.from_pretrained(FINE_TUNE_MODEL_PATH, use_fast=True)
-        self.model = AutoModelForCausalLM.from_pretrained(
-            FINE_TUNE_MODEL_PATH,
-            device_map="auto",
-            torch_dtype=torch.bfloat16 if torch.cuda.is_available() else torch.float32
-        )
-        # Wrap with PEFT if necessary
+
+        # Load PEFT-wrapped model directly
         try:
-            self.model = PeftModel.from_pretrained(self.model, FINE_TUNE_MODEL_PATH)
+            # Directly load PEFT model (safest, suppresses duplicate adapter warnings)
+            self.model = PeftModel.from_pretrained(
+                FINE_TUNE_MODEL_PATH,
+                device_map="cuda:0",
+                torch_dtype=torch.bfloat16 if torch.cuda.is_available() else torch.float32
+            )
         except Exception:
-            LOGGER.info("No PEFT layers detected, using standard model.")
-        self.model.to(self.device)
+            # Fallback: if no PEFT layers exist, load standard model
+            LOGGER.info("No PEFT layers detected, loading base model.")
+            self.model = AutoModelForCausalLM.from_pretrained(
+                FINE_TUNE_MODEL_PATH,
+                device_map="cuda:0",
+                torch_dtype=torch.bfloat16 if torch.cuda.is_available() else torch.float32
+            )
+
+        self.model = torch.compile(self.model)
         self.model.eval()
 
     # -----------------------------
@@ -119,10 +129,11 @@ class HospitalRAGRetriever:
 
         if user_loc or user_hospitals or user_specialities or user_insurances:
             query_text = self._build_query(user_input)
-            k = int(n_hospitals + extra_results)
             
-            if intent not in ["find_best", "find_nearest", "find_by_insurance"]:
+            if intent in ["find_by_hospital", "compare_hospitals"]:
                 k = n_hospitals
+            else:
+                k = int(n_hospitals + extra_results)
         else:
             return []
         
@@ -134,9 +145,10 @@ class HospitalRAGRetriever:
         filtered = []
         for doc in top_docs:
             meta = doc.metadata
-            dist = self._haversine_distance(user_lat, user_lon, meta["latitude"], meta["longitude"])
-            if intent not in ["find_nearest", "find_best"] or dist <= max_distance:
-                filtered.append({**meta, "distance_km": round(dist, 2)})
+            if user_lat and user_lon:
+                dist = self._haversine_distance(user_lat, user_lon, meta["latitude"], meta["longitude"])
+                if dist <= max_distance:
+                    filtered.append({**meta, "distance_km": round(dist, 2)})
 
         if intent == "find_best":
             key_func = lambda x: (-x["rating"], x["distance_km"])
@@ -150,11 +162,13 @@ class HospitalRAGRetriever:
     async def ground_with_insurance_info_qlora(self, user_query: str, retrieved_hospitals: List[dict]) -> str:
         if not hasattr(self, "model"):
             raise RuntimeError("Fine-tuned model not loaded. Set GROUND_WITH_FINE_TUNE=True")
-        
+
+        # Build context string
         hospital_context = "\n".join([
             f"{h['hospital_name']} located in {h['location']}, "
             f"Specialties: {', '.join(h['hospital_type'])}, "
             f"Rating: {h['rating']}"
+            f"Insurance accepted: {', '.join(h['insurance_providers'])}"
             for h in retrieved_hospitals
         ])
 
@@ -163,20 +177,34 @@ class HospitalRAGRetriever:
             f"### Context:\n{hospital_context}\n\n"
             f"### Response:\n"
         )
-        
-        inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
-        with torch.no_grad():
+
+        # Tokenize only once on GPU
+        inputs = self.tokenizer(
+            prompt,
+            return_tensors="pt",
+            truncation=True,
+            max_length=512,
+            padding="longest"
+        ).to(self.device)
+
+        # Enable faster inference: disable gradients, enable caching, and use half precision
+        with torch.inference_mode():  # slightly faster than no_grad()
             output_ids = self.model.generate(
                 **inputs,
-                max_new_tokens=256,         # allow more room for detailed response
+                max_new_tokens=96,         # keep response concise
                 do_sample=True,
-                temperature=0.7,
+                temperature=0.9,
                 top_p=0.9,
-                eos_token_id=self.tokenizer.eos_token_id
+                use_cache=True,             # enables past_key_values cache
+                pad_token_id=self.tokenizer.eos_token_id
             )
+
+        # Decode output efficiently
         response_text = self.tokenizer.decode(output_ids[0], skip_special_tokens=True)
         response = response_text.split("### Response:\n")[-1].strip()
+        print(response_text)
         return response
+
 
     
     # -----------------------------
@@ -281,22 +309,24 @@ async def rag_search_wrapper(
 if __name__ == "__main__":
     import asyncio
     GROUND_WITH_FINE_TUNE = True  # toggle fine-tuned LLM
+    
+    retriever = HospitalRAGRetriever()
 
     test_input = {
         'user_query': "Which insurance plans are accepted at Huwaylat Dermatology Health Institute?", 
         'user_loc': "", 
         'user_lat': None, 
         'user_lon': None, 
-        'intent': 'get_insurance_coverage', 
+        'intent': "find_by_hospital", 
         'hospital_names': ["Huwaylat Dermatology Health Institute"], 
         'hospital_types': [], 
         'insurance_providers': [], 
-        'n_hospitals': 3, 
+        'n_hospitals': 1, 
         'distance_km_radius': 500,
         'extra_results': 5
         }
 
-    hospitals, dialogue = asyncio.run(rag_search_wrapper(**test_input))
+    hospitals, dialogue = asyncio.run(rag_search_wrapper(**test_input, retriever=retriever))
 
     print("\nSelected Hospitals:")
     for h in hospitals:

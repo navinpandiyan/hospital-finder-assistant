@@ -16,7 +16,7 @@ from settings.config import FINE_TUNE_OUTPUT_DIR
 # -----------------------------
 # Training Hyperparameters
 # -----------------------------
-BASE_MODEL = "meta-llama/Llama-2-7b-hf"   # Hugging Face Mistral instruct model
+BASE_MODEL = "openlm-research/open_llama_3b_v2"  # Hugging Face Mistral instruct model
 TOKENIZER_MODEL = BASE_MODEL                    # Usually same as base model
 
 BATCH_SIZE = 1                                 # Per-device batch size (lower for 7B models)
@@ -89,7 +89,7 @@ def fine_tune_insurance_llm(data_path: str = "db/insurance_data.json"):
     # Load model & tokenizer (QLoRA)
     # -----------------------------
     print(f"📦 Loading base model in 4-bit mode (QLoRA): {BASE_MODEL}")
-    tokenizer = AutoTokenizer.from_pretrained(TOKENIZER_MODEL, use_fast=True)
+    tokenizer = AutoTokenizer.from_pretrained(TOKENIZER_MODEL, use_fast=True, legacy=True)
     tokenizer.pad_token = tokenizer.eos_token
 
     bnb_config = BitsAndBytesConfig(
@@ -103,7 +103,6 @@ def fine_tune_insurance_llm(data_path: str = "db/insurance_data.json"):
         BASE_MODEL,
         quantization_config=bnb_config,
         device_map="auto",                  # Automatically spread across GPU/CPU - cuda:0
-        low_cpu_mem_usage=True
     )
 
     model.gradient_checkpointing_enable()
