@@ -1,4 +1,5 @@
 import json
+import time
 import pyaudio
 import asyncio
 import wave
@@ -73,7 +74,7 @@ async def record_audio(
                     frames_per_buffer=chunk)
 
     LOGGER.info("🎙️ Please speak your query now. Recording will stop on silence or after max duration...")
-
+    
     frames = []
     silent_chunks = 0
     # Calculate how many chunks constitute the silence duration
@@ -216,3 +217,12 @@ async def save_state(state: HospitalFinderState, output_dir="outputs"):
     )
     
     return file_path
+
+def show_initializing_animation():
+    """Display an animated 'Initializing...' message."""
+    print("Initializing", end="", flush=True)
+    for _ in range(3):
+        time.sleep(0.6)
+        print(".", end="", flush=True)
+    time.sleep(0.4)
+    print("\r✅ Initialized!                     ")
