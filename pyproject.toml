@@ -119,9 +119,9 @@ dependencies = [
     "thinc==8.2.5",
     "tiktoken==0.12.0",
     "tokenizers==0.22.1",
-    "torch==2.6.0+cu124",
-    "torchaudio==2.6.0+cu124",
-    "torchvision==0.21.0+cu124",
+    "torch @ https://download.pytorch.org/whl/cu124/torch-2.6.0%2Bcu124-cp311-cp311-win_amd64.whl",
+    "torchvision @ https://download.pytorch.org/whl/cu124/torchvision-0.21.0%2Bcu124-cp311-cp311-win_amd64.whl",
+    "torchaudio @ https://download.pytorch.org/whl/cu124/torchaudio-2.6.0%2Bcu124-cp311-cp311-win_amd64.whl",
     "tqdm==4.67.1",
     "transformers==4.57.1",
     "typer==0.19.2",
@@ -136,8 +136,7 @@ dependencies = [
     "wrapt==1.17.3",
     "xxhash==3.6.0",
     "yarl==1.22.0",
-    "zstandard==0.25.0",
-    "-e ./",
+    "zstandard==0.25.0"
 ]
 
 [build-system]
