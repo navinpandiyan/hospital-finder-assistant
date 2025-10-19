@@ -5,7 +5,7 @@ import logging
 # ----------------------------
 # App Mode
 # ----------------------------
-MODE = "voicebot"  # or "voicebot"
+MODE = "chatbot"  # or "voicebot"
 
 # Load environment variables
 load_dotenv()
