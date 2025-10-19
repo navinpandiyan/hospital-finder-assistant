@@ -1,9 +1,9 @@
 ---
-base_model: meta-llama/Llama-2-7b-hf
+base_model: openlm-research/open_llama_3b_v2
 library_name: peft
 pipeline_tag: text-generation
 tags:
-- base_model:adapter:meta-llama/Llama-2-7b-hf
+- base_model:adapter:openlm-research/open_llama_3b_v2
 - lora
 - transformers
 ---

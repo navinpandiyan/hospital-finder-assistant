@@ -1,7 +1,7 @@
 {
   "alpha_pattern": {},
   "auto_mapping": null,
-  "base_model_name_or_path": "meta-llama/Llama-2-7b-hf",
+  "base_model_name_or_path": "openlm-research/open_llama_3b_v2",
   "bias": "none",
   "corda_config": null,
   "eva_config": null,
@@ -25,8 +25,8 @@
   "rank_pattern": {},
   "revision": null,
   "target_modules": [
-    "q_proj",
-    "v_proj"
+    "v_proj",
+    "q_proj"
   ],
   "target_parameters": null,
   "task_type": "CAUSAL_LM",
