@@ -255,7 +255,7 @@ class HospitalRAGRetriever:
             if not retrieved_hospitals:
                 return RAGGroundedResponseModel(hospital_ids=[], dialogue="No hospitals found matching your criteria.")
             hospital_context = "\n".join([
-                f"{h['hospital_id']}: {h['hospital_name']} located in {h['location']}, "
+                f"{h['hospital_id']}: {h['hospital_name']} located in {h['address']}, "
                 f"Specialties: {', '.join(h['hospital_type'])}, "
                 f"Insurance accepted: {', '.join(h['insurance_providers'])}, "
                 f"Rating: {h['rating']}, Distance: {h.get('distance_km', 'N/A')} km"
@@ -340,12 +340,12 @@ if __name__ == "__main__":
     retriever = HospitalRAGRetriever()
 
     test_input = {
-        'user_query': "Can you list the insurance options for Abu Dhabi Sleep Medicine Medical Plaza?", 
-        'user_loc': "", 
-        'user_lat': None, 
-        'user_lon': None, 
-        'intent': "find_by_hospital", 
-        'hospital_names': ["Abu Dhabi Sleep Medicine Medical Plaza"], 
+        'user_query': "What’s the highest-rated diagnostic center in Abu Dhabi?", 
+        'user_loc': "Abu Dhabi", 
+        'user_lat': 24.4538352, 
+        'user_lon': 54.3774014, 
+        'intent': "find_best", 
+        'hospital_names': [], 
         'hospital_types': [], 
         'insurance_providers': [], 
         'n_hospitals': 1, 
