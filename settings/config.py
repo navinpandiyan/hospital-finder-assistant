@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 import spacy
 import logging
+from settings.logger import configure_logging
 
 # ----------------------------
 # App Mode
@@ -18,15 +19,9 @@ load_dotenv()
 # ----------------------------
 # Logging Configuration
 # ----------------------------
-LOG_FLAG = False
+SHOW_LOGS = False # Set to True to enable console logging, False to disable
 
-if not LOG_FLAG:
-    # Disable all logging output
-    logging.disable(logging.CRITICAL)
-    LOGGER = logging.getLogger("app.log")
-else:
-    logging.basicConfig(level=logging.INFO)
-    LOGGER = logging.getLogger("app.log")
+LOGGER = configure_logging(SHOW_LOGS)
 
 # Load spaCy NER Model
 try:
