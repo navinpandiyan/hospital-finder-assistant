@@ -18,8 +18,8 @@ def configure_logging(log_to_console=False):
         logging.root.removeHandler(handler)
 
     # Configure file handler
-    file_handler = RotatingFileHandler(log_file, maxBytes=10485760, backupCount=5, encoding='utf-8')
-    file_handler.setFormatter(logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s", errors='ignore'))
+    file_handler = RotatingFileHandler(log_file, maxBytes=10485760, backupCount=5, encoding='utf-8', errors="ignore")
+    file_handler.setFormatter(logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s"))
 
     # Configure base logger to only include the file handler
     logging.basicConfig(level=logging.INFO, handlers=[file_handler])
