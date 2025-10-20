@@ -232,7 +232,7 @@ This module provides the functionality to fine-tune a Large Language Model (LLM)
 
 **Functions:**
 
-*   **`def fine_tune_insurance_llm(data_path: str = "db/insurance_data.json") -> str`**:
+*   **`def fine_tune_insurance_llm(data_path: str = "data/insurance_data.json") -> str`**:
     *   **Purpose**: Orchestrates the entire QLoRA fine-tuning process for an LLM on insurance-related data.
     *   **Parameters**:
         *   `data_path` (str): Path to the JSON dataset used for fine-tuning. This dataset should contain `instruction`, `context`, and `response` fields.
@@ -443,7 +443,7 @@ This module centralizes all configuration parameters and constants used througho
     *   `BASE_MODEL` (str): Base Hugging Face model for fine-tuning.
     *   `TOKENIZER_MODEL` (str): Tokenizer model for fine-tuning.
     *   `FINE_TUNE_OUTPUT_DIR` (str): Directory where the fine-tuned model and tokenizer are saved.
-    *   `FINE_TUNE_DATA_PATH` (str): Path to the fine-tuning dataset (e.g., "db/insurance_data.json").
+    *   `FINE_TUNE_DATA_PATH` (str): Path to the fine-tuning dataset (e.g., "data/insurance_data.json").
     *   `BATCH_SIZE`, `EPOCHS`, `LEARNING_RATE`, `MAX_SEQ_LEN`, `GRADIENT_ACCUMULATION_STEPS`, `FP16`: Training hyperparameters for QLoRA.
     *   `SAVE_STEPS`, `LOGGING_STEPS`: Checkpoint and logging frequency.
     *   `LORA_R`, `LORA_ALPHA`, `LORA_DROPOUT`, `TARGET_MODULES`, `LORA_TASK_TYPE`: QLoRA specific parameters.
