@@ -1,106 +1,105 @@
 # Voice Hospital Finder Bot
 
-## An AI-powered conversational agent to find nearby hospitals using voice commands.
-
-![Voice Hospital Finder Bot](https://i.ibb.co/7d0JBJFZ/558128e7-157a-4c31-bb7b-c07414dc8cf5.png)
-
-## Table of Contents
-*   [Introduction](#introduction)
-*   [Features](#features)
-*   [Architecture Highlights](#architecture-highlights)
-*   [Setup and Installation](#setup-and-installation)
-*   [Usage](#usage)
-*   [Configuration](#configuration)
-*   [Detailed Documentation](#detailed-documentation)
-*   [Contributing](#contributing)
-*   [License](#license)
-
-## Introduction
-The Voice Hospital Finder Bot is an interactive application that allows users to search for hospitals using natural voice commands. Leveraging Speech-to-Text (STT), Natural Language Understanding (NLU), and Text-to-Speech (TTS) technologies, it provides a seamless and intuitive way to locate healthcare facilities based on criteria such as location, hospital type, and insurance providers.
+This project implements a voice-enabled hospital finder bot. It leverages a combination of speech-to-text, natural language understanding, Retrieval Augmented Generation (RAG) with FAISS vector database, LLM fine-tuning, and text-to-speech to provide an interactive experience for users looking for hospitals.
 
 ## Features
-*   **Voice-Activated Interface**: Interact effortlessly through natural spoken language.
-*   **Intelligent Query & Response Generation**: Understands various user intents and extracts relevant criteria using advanced Natural Language Understanding (NLU). This system is significantly enhanced by:
-    *   **Vector Database (Vectordb) for RAG**: Provides Retriever-Augmented Generation capabilities, allowing the bot to fetch contextually relevant information from a robust knowledge base to aid in query responses.
-    *   **Fine-tuned QLoRA based LLM**: Specialized in handling insurance queries and general intent recognition, this model works in conjunction with the RAG system to generate precise, context-aware responses, rather than merely recognizing intents.
-*   **Accurate Hospital Search**: Finds and ranks hospitals by proximity and other specified criteria, powered by an SQLite database.
-*   **Conversational Flow**: Manages chat context to ask clarifying questions, validating recognized entities (like location) and guiding users effectively.
-*   **Flexible Configuration**: Easily adjust language models, search parameters, and conversational behavior, including optional LLM usage for NLU and TTS dialogue refinement.
 
-## Architecture Highlights
-The bot is built around a `langgraph` StateGraph, which dynamically manages the conversational flow, adeptly handling various user intents. While it integrates several AI models for voice processing and understanding, it is notably enhanced by:
-*   **Vector Database (Vectordb)**: Utilized for Retriever-Augmented Generation (RAG) capabilities, allowing the bot to fetch contextually relevant information from a robust knowledge base to aid in query responses.
-*   **Fine-tuned QLoRA based LLM**: Specifically trained on insurance queries, this model significantly improves the accuracy and relevance of responses related to insurance providers and policies.
-*   Custom tools for transcribing audio input using OpenAI Whisper, converting text responses back to speech using OpenAI TTS, and performing detailed hospital lookups with distance calculations and intelligent scoring.
+*   **Voice Interface**: Interact with the bot using spoken language (transcription and text-to-speech).
+*   **Natural Language Understanding**: Extracts user intent, location, hospital types, and insurance providers from natural language queries.
+*   **Hospital Database**: Stores structured information about hospitals and insurance plans using SQLite and Pony ORM.
+*   **FAISS Vector Database**: Enables efficient semantic search for hospitals based on query embeddings.
+*   **Retrieval Augmented Generation (RAG)**: Combines vector search with large language models (LLMs) to provide grounded responses.
+*   **LLM Fine-tuning (QLoRA)**: Optionally fine-tunes a language model to improve response generation for specific use cases (e.g., insurance queries).
+*   **Modular Design**: Structured into `db/`, `graphs/`, and `tools/` directories for clear separation of concerns.
 
-For an in-depth understanding of the architecture, state management, and core tools, please refer to the [Detailed Documentation](#detailed-documentation). You can view the architectural flowchart [here](https://excalidraw.com/#json=oW09Ru21JJKzaYMnwFm-C,1YmWJCb3bafyPVmYW73rCQ).
+## Project Structure
 
-## Setup and Installation
+*   `app.py`: Main application entry point, initializes the RAG retriever and starts the LangGraph conversational flow.
+*   `db/`: Contains database-related functionalities.
+    *   `db.py`: Sets up the SQLite database, defines `Hospital` and `InsurancePlan` models, populates data, creates the FAISS vector database, and orchestrates LLM fine-tuning data generation and training.
+    *   `models.py`: Defines Pydantic models for structured data, including LLM responses, RAG grounding, and the overall `HospitalFinderState`.
+    *   `modules/`: Sub-directory for database-related modules like data generation and fine-tuning.
+        *   `fine_tuner.py`: Implements the QLoRA fine-tuning process for a language model.
+        *   `hospital_generator.py`: (Not read, but inferred from `db.py`) Likely generates synthetic hospital data.
+        *   `insurance_generator.py`: (Not read, but inferred from `db.py`) Likely generates synthetic insurance plan data.
+        *   `vector_db_generator.py`: (Not read, but inferred from `db.py`) Likely handles the creation of the FAISS vector database.
+        *   `fine_tune_data_generator.py`: (Not read, but inferred from `db.py`) Likely generates data for LLM fine-tuning.
+*   `graphs/`: Contains the conversational graph logic.
+    *   `hospital_graph.py`: (Not read, but inferred from `app.py`) Likely defines the LangGraph state machine for the hospital finding process.
+    *   `graph_tools.py`: Defines Langchain `tool`s used within the conversational graph, such as `transcribe_audio_tool`, `recognize_query_tool`, `text_to_speech_tool`, `hospital_lookup_tool`, and `hospital_lookup_rag_tool`.
+*   `tools/`: Houses various utility tools.
+    *   `rag_retrieve.py`: Implements the `HospitalRAGRetriever` class for retrieving hospital information using FAISS and grounding responses with an LLM (optionally fine-tuned).
+    *   `transcribe.py`: (Not read, but inferred from `graph_tools.py`) Likely handles speech-to-text functionality.
+    *   `recognize.py`: (Not read, but inferred from `graph_tools.py`) Likely handles natural language recognition and extraction.
+    *   `text_to_speech.py`: (Not read, but inferred from `graph_tools.py`) Likely handles text-to-speech functionality.
+    *   `hospital_lookup.py`: (Not read, but inferred `graph_tools.py`) Likely contains the logic for direct hospital database lookup.
+*   `settings/`: Configuration files.
+    *   `config.py`: Centralized configuration for the application, including API keys, model names, hyperparameters, and file paths.
+    *   `prompts.py`: (Not read, but inferred from `rag_retrieve.py`) Likely contains LLM prompts used for various tasks.
+    *   `client.py`: (Not read, but inferred from `rag_retrieve.py`) Likely sets up the LLM client.
 
-### Prerequisites
-*   Python 3.8+
-*   `ffmpeg`: Essential for audio processing. Install via your system's package manager (e.g., `sudo apt-get install ffmpeg` on Ubuntu, `brew install ffmpeg` on macOS, or download binaries for Windows).
-*   spaCy English model:
-    ```bash
-    uv run -- spacy download en_core_web_sm
-    ```
+## 🚀 Setup and Installation (using `uv`)
 
-### Installation Steps
-1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/navinpandiyan/voice-hospital-finder-bot.git
-    cd voice-hospital-finder-bot
-    ```
-2.  **Install dependencies and run the application using `uv`:**
-    If you have `uv` installed, simply run:
-    ```bash
-    uv run app.py
-    ```
-    `uv` will automatically create and manage a virtual environment and install dependencies from `requirements.txt`.
+### 1. **Clone the repository**
+```bash
+git clone https://github.com/navinpandiyan/voice-hospital-finder-bot.git
+cd voice-hospital-finder-bot
+```
 
-    **Alternatively, using `pip` and manual virtual environments:**
-    2.  **Create and activate a virtual environment:**
-        ```bash
-        python -m venv venv
-        # On Windows
-        .\venv\Scripts\activate
-        # On macOS/Linux
-        source venv/bin/activate
-        ```
-    3.  **Install dependencies:**
-        ```bash
-        pip install -r requirements.txt
-        ```
+### 2. Install uv (Modern Python Package Manager)
 
-3.  **Set up Environment Variables**: Create a `.env` file in the root directory:
-    ```
-    OPENAI_API_KEY="your_openai_api_key_for_whisper_and_tts"
-    LLM_API_KEY="your_llm_api_key_for_intent_identification" # For models configured in settings/config.py (e.g., Google Gemini)
-    LLM_BASE_URL="your_llm_base_url" # Optional: e.g., for local LLMs or specific API endpoints
-    ```
-    *   `OPENAI_API_KEY` is required for Speech-to-Text (Whisper) and Text-to-Speech functions.
-    *   `LLM_API_KEY` and `LLM_BASE_URL` are used for intent identification and query recognition if using models other than OpenAI, as configured in `settings/config.py`.
+If you don’t have uv installed, run:
 
-## Usage
-To start the Voice Hospital Finder Bot, execute:
+```bash
+pip install uv
+```
+
+Or, for a faster global installation:
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+Then verify installation:
+
+```bash
+uv --version
+```
+
+### 3. Create a virtual environment and sync dependencies
+
+`uv` automatically manages your virtual environment and dependencies.
+
+```bash
+uv sync
+```
+
+This will:
+
+*   Create a `.venv/` environment
+*   Install dependencies from `pyproject.toml` or `requirements.txt`
+*   Ensure consistent versions across systems
+
+### 4. Set up environment variables
+
+Create a `.env` file in the project root and add your API keys:
+
+```
+OPENAI_API_KEY="your_openai_api_key_here"  # For TTS and Embedding Models
+LLM_API_KEY="your_llm_api_key_here"        # For Backend LLM (OpenAI/OpenRouter/etc)
+LLM_BASE_URL="https://api.openai.com/v1"   # Or custom LLM endpoint
+```
+
+### 5. Run the application
 ```bash
 uv run app.py
-# Or if using pip/venv: python app.py
 ```
-The bot will verbally prompt you. Speak your queries clearly, such as:
-*   "Find a cardiology hospital in Dubai."
-*   "Show me hospitals that accept Aetna insurance in Abu Dhabi."
-*   "Are there any pediatric hospitals near Al Ain?"
 
-To end the conversation, use keywords like "stop", "exit", "quit", or "goodbye".
+The application will:
 
-## Configuration
-Key configurable parameters are located in `settings/config.py`. These include settings for:
-*   NLP models (e.g., `NLP_MODEL` for spaCy, `RECOGNIZER_MODEL` for LLM-based entity recognition).
-*   Hospital types and insurance providers data.
-*   Speech-to-Text and Text-to-Speech models (e.g., `TEXT_TO_DIALOGUE_MODEL` for LLM-driven dialogue refinement).
-*   Conversational `MAX_TURNS`.
-For a complete list and explanation, refer to the [Detailed Documentation](#detailed-documentation).
+*   Initialize the database (if empty)
+*   Generate synthetic data
+*   Create the FAISS vector database
+*   (Optionally) fine-tune the LLM
 
-## Detailed Documentation
-For a comprehensive guide, including in-depth architectural details, extensibility options, and advanced troubleshooting, please see [DOCUMENTATION.md](/docs/DOCUMENTATION.md).
+Launch the voice bot 🎙️
