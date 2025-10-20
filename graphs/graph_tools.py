@@ -65,7 +65,7 @@ async def hospital_lookup_rag_tool(
     insurance_providers: Optional[List[str]] = None,
     n_hospitals: int = 5,  # default is 5 hospitals
     distance_km_radius: float = 30000,  # default is 30000 kms
-    extra_results: int = 5
+    extra_results: int = 10
 ) -> Tuple[List[dict], str]:
     """
     Perform a RAG-based hospital lookup using FAISS vector search and LLM grounding.

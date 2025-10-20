@@ -188,7 +188,7 @@ async def find_hospitals(state: HospitalFinderState):
             "insurance_providers": state.recognition.get("insurance"),
             "n_hospitals": n_hospitals,
             "distance_km_radius": distance_km,
-            "extra_results": 5
+            # "extra_results": 5
         })
 
     state.hospitals_found = {"retrieved": retrieved_hospitals, "selected": selected_hospitals}
