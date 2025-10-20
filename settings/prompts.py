@@ -260,7 +260,7 @@ Your task:
 2. Generate a concise, human-friendly dialogue that a voice bot can speak.
    The dialogue must include for each recommended hospital:
    - Hospital Name
-   - Address & City
+   - Road Name & City (not full address)
    - Distance from user (in km)
    - Specialty & Insurance Coverage Info
 
