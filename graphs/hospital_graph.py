@@ -22,6 +22,7 @@ from utils.utils import play_audio, save_state, summarize_conversation
 from tools.record import record_audio
 
 graph = StateGraph(HospitalFinderState)
+graph.config["recursion_limit"] = 50
 
 # ----------------------------
 # Node: Handle user input (record or chatbot text)
