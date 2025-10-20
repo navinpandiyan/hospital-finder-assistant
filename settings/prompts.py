@@ -12,8 +12,9 @@ Select the intent based on the user’s request:
 - "find_nearest": User asks for nearby hospitals (e.g., "Find the nearest cardiology hospital in Abu Dhabi").
 - "find_best": User asks for top-rated or best hospitals.
 - "find_by_insurance": User asks for hospitals that accept or are covered by a specific insurance provider.
+  - Also include queries comparing **insurance coverage in an area** (e.g., "Which provider has more coverage in Dubai. AXA or Metlife?").
 - "find_by_hospital": User asks for information about a specific hospital (e.g., "What insurance does ABC Hospital cover?", "What does ABC Hospital specialize in?").
-- "compare_hospitals": User compares hospitals or providers (e.g., "Compare Burjeel vs Aster hospitals").
+- "compare_hospitals": User compares hospitals or providers (e.g., "Compare Sharjah General Hospital with Ajman Medical Center for pediatrics").
 - "exit": User indicates they want to stop, end, or close the conversation (e.g., "thank you", "that's all", "stop", "exit", "bye").
 - Default to "find_nearest" if intent cannot be inferred confidently.
 - Default to "find_nearest" if the user mentions anything like nearest / close to / near / around 'location' / .
@@ -128,38 +129,22 @@ Output:
 }}
 
 4️⃣ Input:
-"What insurance types does Burjeel Hospital cover?"
+"Which provider has more coverage in Dubai. AXA or Metlife?"
 
 Output:
 {{
-  "query": "what insurance types does burjeel hospital cover?",
-  "intent": "find_by_hospital",
-  "location": null,
-  "hospital_names": ["burjeel hospital"],
+  "query": "Which provider has more coverage in Dubai. Bup or AXA or Metlife?",
+  "intent": "find_by_insurance",
+  "location": "dubai",
+  "hospital_names": [],
   "hospital_type": [],
-  "insurance": [],
+  "insurance": ["bupa", "metlife", "axa"],
   "provider_name": null,
-  "n_hospitals": 1,
+  "n_hospitals": 3,
   "distance_km": 30000
 }}
 
 5️⃣ Input:
-"What does Aster Hospital specialize in?"
-
-Output:
-{{
-  "query": "what does aster hospital specialize in?",
-  "intent": "find_by_hospital",
-  "location": null,
-  "hospital_names": ["aster hospital"],
-  "hospital_type": [],
-  "insurance": [],
-  "provider_name": null,
-  "n_hospitals": 1,
-  "distance_km": 30000
-}}
-
-6️⃣ Input:
 "Compare Burjeel and Aster hospitals in Abu Dhabi"
 
 Output:
@@ -175,7 +160,7 @@ Output:
   "distance_km": 30000
 }}
 
-7️⃣ Input:
+6️⃣ Input:
 "Thank you, that's all for now"
 
 Output:
