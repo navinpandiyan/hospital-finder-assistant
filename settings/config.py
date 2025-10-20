@@ -144,7 +144,7 @@ TEXT_TO_DIALOGUE = False
 TEXT_TO_DIALOGUE_MODEL = "google/gemini-2.0-flash-001"
 TEXT_TO_DIALOGUE_TEMPERATURE = 0.1
 
-MAX_TURNS = 7
+MAX_TURNS = 10
 
 # Hospital Finder Config
 DEFAULT_N_HOSPITALS_TO_RETURN = 5
@@ -157,56 +157,7 @@ GROUND_WITH_FINE_TUNE = True
 
 
 # -----------------------------
+# QLoRA Output / Data Paths
 # -----------------------------
-# LLM Fine-Tuning Configurations
-# -----------------------------
-# -----------------------------
-
-# -----------------------------
-# Base Model Configurations
-# -----------------------------
-BASE_MODEL = "mistralai/Mistral-7B-Instruct"   # Hugging Face Mistral instruct model
-TOKENIZER_MODEL = BASE_MODEL                    # Usually same as base model
-
-# -----------------------------
-# Output / Data Paths
-# -----------------------------
+FINE_TUNE_DATA_PATH = "data/insurance_data.json" # Fine-tuning data
 FINE_TUNE_OUTPUT_DIR = "data/rag_llm"          # Where fine-tuned model will be saved
-FINE_TUNE_DATA_PATH = "db/insurance_data.json" # Fine-tuning data
-
-# -----------------------------
-# Training Hyperparameters
-# -----------------------------
-BATCH_SIZE = 1                                 # Per-device batch size (lower for 7B models)
-EPOCHS = 3                                     # Fine-tuning epochs
-LEARNING_RATE = 2e-4                           # Learning rate
-MAX_SEQ_LEN = 512                               # Max token length for inputs
-
-# Gradient accumulation for effective batch size
-GRADIENT_ACCUMULATION_STEPS = 8               # Increase for memory-constrained GPUs
-
-# Mixed precision
-FP16 = True
-
-# -----------------------------
-# Logging / Checkpoints
-# -----------------------------
-SAVE_STEPS = 50                                # Save checkpoint every N steps
-LOGGING_STEPS = 20                              # Log every N steps
-
-# -----------------------------
-# QLoRA / LoRA Configuration
-# -----------------------------
-LOAD_IN_4BIT = True                            # 4-bit quantization
-LORA_R = 16
-LORA_ALPHA = 32
-LORA_DROPOUT = 0.05
-TARGET_MODULES = ["q_proj", "v_proj"]         # Mistral uses 'q_proj' and 'v_proj' in transformer layers
-LORA_TASK_TYPE = "CAUSAL_LM"
-
-# -----------------------------
-# Optional / Advanced
-# -----------------------------
-USE_SAFETENSORS = True                         # Save model in safe serialization
-OPTIMIZER = "adamw_torch"
-GRADIENT_CHECKPOINTING = True                  # Save memory during training

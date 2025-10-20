@@ -11,7 +11,7 @@ from transformers import (
     BitsAndBytesConfig,
 )
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
-from settings.config import FINE_TUNE_OUTPUT_DIR
+from settings.config import FINE_TUNE_DATA_PATH, FINE_TUNE_OUTPUT_DIR
 
 # -----------------------------
 # Training Hyperparameters
@@ -49,7 +49,7 @@ LORA_TASK_TYPE = "CAUSAL_LM"
 # -----------------------------
 # Fine-tuning function (QLoRA)
 # -----------------------------
-def fine_tune_insurance_llm(data_path: str = "db/insurance_data.json"):
+def fine_tune_insurance_llm(data_path: str = FINE_TUNE_DATA_PATH):
     print(f"🚀 Loading dataset from: {data_path}")
     with open(data_path, "r", encoding="utf-8") as f:
         raw_data = json.load(f)

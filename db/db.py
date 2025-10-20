@@ -16,7 +16,7 @@ from settings.config import (
 from db.modules.hospital_generator import generate_hospital_records
 from db.modules.insurance_generator import generate_insurance_plans
 from db.modules.vector_db_generator import create_vector_db_from_records
-from db.modules.fine_tune import fine_tune_insurance_llm
+from db.modules.fine_tuner import fine_tune_insurance_llm
 from db.modules.fine_tune_data_generator import generate_insurance_fine_tuning_data_dialogue
 
 # -----------------------------
