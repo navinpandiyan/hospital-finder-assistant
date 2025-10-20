@@ -5,7 +5,7 @@ import logging
 # ----------------------------
 # App Mode
 # ----------------------------
-MODE = "voicebot"  # "voicebot" or "chat"
+MODE = "chatbot"  # "voicebot" or "chat"
 
 # Toggle between bot modes
 # "chat": Engage with a chatbot through text.
@@ -18,7 +18,8 @@ load_dotenv()
 # ----------------------------
 # Logging Configuration
 # ----------------------------
-if MODE == "chatbot" or MODE == "voicebot":
+LOG_FLAG = False
+if not LOG_FLAG:
     # Disable all logging output
     logging.disable(logging.CRITICAL)
     LOGGER = logging.getLogger("app.log")
@@ -149,7 +150,7 @@ TEXT_TO_DIALOGUE = False
 TEXT_TO_DIALOGUE_MODEL = "google/gemini-2.0-flash-001"
 TEXT_TO_DIALOGUE_TEMPERATURE = 0.1
 
-MAX_TURNS = 10
+MAX_TURNS = 25
 
 # Hospital Finder Config
 DEFAULT_N_HOSPITALS_TO_RETURN = 5
