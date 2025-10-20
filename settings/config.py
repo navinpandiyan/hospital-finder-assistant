@@ -5,7 +5,12 @@ import logging
 # ----------------------------
 # App Mode
 # ----------------------------
-MODE = "chatbot"  # or "voicebot"
+MODE = "voicebot"  # "voicebot" or "chat"
+
+# Toggle between bot modes
+# "chat": Engage with a chatbot through text.
+# "voicebot": Interact with a voice bot using speech recognition and synthesis.
+# To switch mode, change the MODE variable accordingly.
 
 # Load environment variables
 load_dotenv()
