@@ -19,6 +19,7 @@ load_dotenv()
 # Logging Configuration
 # ----------------------------
 LOG_FLAG = False
+
 if not LOG_FLAG:
     # Disable all logging output
     logging.disable(logging.CRITICAL)
