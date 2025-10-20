@@ -41,7 +41,10 @@ class HospitalRAGRetriever:
         self.vector_db = None
         self._load_vector_db()
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self._load_finetuned_model()
+        self.model = None
+        self.tokenizer = None
+        if GROUND_WITH_FINE_TUNE:
+            self._load_finetuned_model()
 
     def _load_vector_db(self):
         if not os.path.exists(self.vector_db_path):
@@ -159,11 +162,11 @@ class HospitalRAGRetriever:
         return sorted(filtered, key=key_func)
 
     # -----------------------------
-    # Fine-tuned QLoRA grounding
+    # Fine-tuned QLoRA grounding (for 'find_by_hospital' intent)
     # -----------------------------
-    async def ground_with_insurance_info_qlora(self, user_query: str, retrieved_hospitals: List[dict]) -> str:
-        if not hasattr(self, "model"):
-            raise RuntimeError("Fine-tuned model not loaded. Set GROUND_WITH_FINE_TUNE=True")
+    async def ground_with_qlora(self, user_query: str, retrieved_hospitals: List[dict]) -> str:
+        if not hasattr(self, "model") or self.model is None or self.tokenizer is None:
+            raise RuntimeError("Fine-tuned QLoRA model or tokenizer not loaded. Check GROUND_WITH_FINE_TUNE in config.py")
 
         # Build context string
         hospital_context = "\n".join([
@@ -190,7 +193,7 @@ class HospitalRAGRetriever:
         ).to(self.device)
 
         # Enable faster inference: disable gradients, enable caching, and use half precision
-        with torch.inference_mode(), torch.amp.autocast(device_type="cuda", dtype=torch.bfloat16):  # slightly faster than no_grad()
+        with torch.inference_mode(), torch.amp.autocast(device_type="cuda", dtype=torch.bfloat16):
             output_ids = self.model.generate(
                 **inputs,
                 max_new_tokens=192,         # keep response concise
@@ -203,11 +206,17 @@ class HospitalRAGRetriever:
 
         # Decode output efficiently
         response_text = self.tokenizer.decode(output_ids[0], skip_special_tokens=True)
-        if "." in response_text:
-            response_text = response_text[:response_text.rfind(".") + 1].strip()
-        response = response_text.split("### Response:\n")[-1].strip() 
-        return response
+        # Extract only the response part, it may contain the original prompt due to how generate() works
+        if "### Response:\n" in response_text:
+            response = response_text.split("### Response:\n")[-1].strip()
+        else:
+            response = response_text.strip() # Fallback if marker not found
 
+        # Ensure response ends nicely
+        if "." in response:
+            response = response[:response.rfind(".") + 1].strip()
+        
+        return response
 
     
     # -----------------------------
@@ -220,9 +229,24 @@ class HospitalRAGRetriever:
         user_insurances = user_input.get("insurance_providers", [])
         user_insurances = list(set(user_insurances).intersection(INSURANCE_PROVIDERS))
         
-        if user_input.get("intent", "find_nearest") not in ["find_by_hospital"]:  
-        # if user_input.get("intent", "find_nearest"):  
-        # if not GROUND_WITH_FINE_TUNE:  
+        # Determine whether to use QLoRA model
+        use_qlora_for_grounding = (
+            GROUND_WITH_FINE_TUNE and 
+            user_input.get("intent") == "find_by_hospital" and
+            self.model is not None and self.tokenizer is not None
+        )
+
+        if use_qlora_for_grounding:
+            LOGGER.info(f"RAG Grounding: QLoRA Model for intent 'find_by_hospital'")
+            dialogue_response = await self.ground_with_qlora(
+                user_input.get("user_query", ""), 
+                retrieved_hospitals
+            )
+            # When using QLoRA for grounding, assume all retrieved hospitals are relevant
+            hospital_ids = [h['hospital_id'] for h in retrieved_hospitals]
+            return RAGGroundedResponseModel(hospital_ids=hospital_ids, dialogue=dialogue_response)
+        
+        else: # Fallback to standard RAG grounding
             LOGGER.info(f"RAG Grounding: {RAG_GROUNDER_MODEL}")
             if not retrieved_hospitals:
                 return RAGGroundedResponseModel(hospital_ids=[], dialogue="No hospitals found matching your criteria.")
@@ -259,12 +283,6 @@ class HospitalRAGRetriever:
             
             response_parsed = response.choices[0].message.parsed
             return response_parsed
-        
-        else: #Use QLoRA Model if find_by_hospital
-            LOGGER.info(f"RAG Grounding: QLoRA Model")
-            response = await self.ground_with_insurance_info_qlora(user_input.get("user_query", ""), retrieved_hospitals)
-            result = RAGGroundedResponseModel(hospital_ids=[h['hospital_id'] for h in retrieved_hospitals], dialogue=response)
-            return result
 
     
 
