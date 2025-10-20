@@ -144,4 +144,4 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["db", "data", "graphs", "audios", "settings", "outputs", "tools", "utils"]
+packages = ["db", "logs", "data", "graphs", "audios", "settings", "outputs", "tools", "utils"]
