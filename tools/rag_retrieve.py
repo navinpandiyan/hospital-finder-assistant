@@ -196,11 +196,11 @@ class HospitalRAGRetriever:
         ).to(self.device)
 
         # Enable faster inference: disable gradients, enable caching, and use half precision
-        max_new_tokens = 150 + 50 * len(set([i['insurance_providers'] for i in retrieved_hospitals]))
+        # max_new_tokens = 150 + 50 * len(set([i['insurance_providers'] for i in retrieved_hospitals]))
         with torch.inference_mode(), torch.amp.autocast(device_type="cuda", dtype=torch.bfloat16):
             output_ids = self.model.generate(
                 **inputs,
-                max_new_tokens=max_new_tokens,         # keep response concise
+                max_new_tokens=192,         # keep response concise
                 do_sample=False,
                 # temperature=0.5,
                 # top_p=0.9,
