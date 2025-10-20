@@ -7,6 +7,8 @@ This function is called in the first node of the LangGraph: record → transcrib
 
 import asyncio
 import os
+import sys
+import time
 import pyaudio
 import wave
 import audioop # Import for audio processing
@@ -38,53 +40,52 @@ async def record_audio(
         silence_duration (float): Number of seconds of consecutive silence to stop recording.
     """
     p = pyaudio.PyAudio()
-
     stream = p.open(format=pyaudio.paInt16,
                     channels=channels,
                     rate=rate,
                     input=True,
                     frames_per_buffer=chunk)
 
-    LOGGER.info("🎙️ Please speak your query now. Recording will stop on silence or after max duration...")
-    
     frames = []
     silent_chunks = 0
-    # Calculate how many chunks constitute the silence duration
     max_silent_chunks = int(rate / chunk * silence_duration)
-    # Calculate total chunks for max duration
     max_total_chunks = int(rate / chunk * duration)
 
-    for i in range(0, max_total_chunks):
-        try:
+    # Cycle dots setup
+    dots = ["   ", ".  ", ".. ", "..."]
+    dot_index = 0
+    last_dot_time = time.time()
+    dot_interval = 0.5  # seconds between dot updates
+
+    try:
+        for i in range(max_total_chunks):
             data = stream.read(chunk, exception_on_overflow=False)
-        except IOError as e:
-            LOGGER.warning(f"Audio buffer overflow: {e}")
-            continue # Continue recording, maybe some data was lost
+            frames.append(data)
 
-        frames.append(data)
-        
-        # Calculate RMS for silence detection
-        rms = audioop.rms(data, 2)  # data is 16-bit samples, so width is 2 bytes
+            rms = audioop.rms(data, 2)
+            if rms < silence_threshold:
+                silent_chunks += 1
+                if silent_chunks > max_silent_chunks:
+                    break
+            else:
+                silent_chunks = 0
 
-        if rms < silence_threshold:
-            silent_chunks += 1
-            if silent_chunks > max_silent_chunks:
-                LOGGER.info(f"Silence detected for ~{silence_duration} seconds. Stopping recording.")
-                break  # Silence detected, stop recording
-        else:
-            silent_chunks = 0  # Reset silent chunks counter if sound is detected
+            # Only update dots every dot_interval seconds
+            if time.time() - last_dot_time >= dot_interval:
+                sys.stdout.write(f"\r🎙️ Recording{dots[dot_index]}")
+                sys.stdout.flush()
+                dot_index = (dot_index + 1) % len(dots)
+                last_dot_time = time.time()
 
-    LOGGER.debug("Recording finished.")
+    finally:
+        stream.stop_stream()
+        stream.close()
+        p.terminate()
+        # Clear the line after recording ends
+        sys.stdout.write("\r" + " " * 50 + "\r")
+        sys.stdout.flush()
 
-    stream.stop_stream()
-    stream.close()
-    p.terminate()
-
-    # Ensure the directory exists
-    output_dir = os.path.dirname(output_filename)
-    if output_dir and not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-
+    os.makedirs(os.path.dirname(output_filename) or ".", exist_ok=True)
     wf = wave.open(output_filename, 'wb')
     wf.setnchannels(channels)
     wf.setsampwidth(p.get_sample_size(pyaudio.paInt16))
