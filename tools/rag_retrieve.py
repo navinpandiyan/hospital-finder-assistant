@@ -71,7 +71,7 @@ class HospitalRAGRetriever:
             self.model = PeftModel.from_pretrained(
                 FINE_TUNE_MODEL_PATH,
                 device_map="cuda:0",
-                torch_dtype=torch.bfloat16 if torch.cuda.is_available() else torch.float32
+                dtype=torch.bfloat16 if torch.cuda.is_available() else torch.float32
             )
         except Exception:
             # Fallback: if no PEFT layers exist, load standard model
@@ -79,7 +79,7 @@ class HospitalRAGRetriever:
             self.model = AutoModelForCausalLM.from_pretrained(
                 FINE_TUNE_MODEL_PATH,
                 device_map="cuda:0",
-                torch_dtype=torch.bfloat16 if torch.cuda.is_available() else torch.float32
+                dtype=torch.bfloat16 if torch.cuda.is_available() else torch.float32
             )
 
         # Compile the model once for faster inference (PyTorch 2.1+)
