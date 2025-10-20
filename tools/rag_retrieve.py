@@ -82,7 +82,10 @@ class HospitalRAGRetriever:
                 torch_dtype=torch.bfloat16 if torch.cuda.is_available() else torch.float32
             )
 
-        self.model = torch.compile(self.model)
+        # Compile the model once for faster inference (PyTorch 2.1+)
+        if not getattr(self.model, "_is_compiled", False):
+            self.model = torch.compile(self.model)
+            setattr(self.model, "_is_compiled", True)
         self.model.eval()
 
     # -----------------------------
