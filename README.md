@@ -2,41 +2,54 @@
 
 This project implements a voice-enabled hospital finder bot. It leverages a combination of speech-to-text, natural language understanding, Retrieval Augmented Generation (RAG) with FAISS vector database, LLM fine-tuning, and text-to-speech to provide an interactive experience for users looking for hospitals.
 
-## Features
+## Key Features
 
-*   **Voice Interface**: Interact with the bot using spoken language (transcription and text-to-speech).
-*   **Natural Language Understanding**: Extracts user intent, location, hospital types, and insurance providers from natural language queries.
-*   **Hospital Database**: Stores structured information about hospitals and insurance plans using SQLite and Pony ORM.
-*   **FAISS Vector Database**: Enables efficient semantic search for hospitals based on query embeddings.
-*   **Retrieval Augmented Generation (RAG)**: Combines vector search with large language models (LLMs) to provide grounded responses.
-*   **LLM Fine-tuning (QLoRA)**: Optionally fine-tunes a language model to improve response generation for specific use cases (e.g., insurance queries).
-*   **Modular Design**: Structured into `db/`, `graphs/`, and `tools/` directories for clear separation of concerns.
+*   🎤 **Voice Interaction**: Speech → text → structured intent → response → speech.
+*   🧠 **Intent Understanding**: Extracts user intent, location, insurance provider, and hospital names.
+*   🧾 **Structured Knowledge Base**: Uses synthetic hospital + insurance plan data.
+*   ⚡ **FAISS Vector Search**: Enables semantic retrieval of relevant hospitals.
+*   🧩 **Extensible Architecture**: Pluggable with new LLM, STT, and TTS models.
+*   🔄 **Domain Fine-Tuning**: Supports LoRA fine-tuning using PEFT for healthcare contexts.
+*   🗣️ **Natural Conversation**: Generates context-aware, human-like dialogue.
 
-## Project Structure
+## Architecture & Flow
+1. **Input Layer (Voice/Text)**: User speaks or types a query.
+2. **Intent Recognition**: The system identifies one of six intents:
+   - Find Nearest
+   - Find Best
+   - Find by Insurance
+   - Find by Hospital
+   - Compare Hospitals
+   - Exit
+3. **Follow-up Clarification**: For certain intents, the bot asks for clarification (e.g., missing location).
+4. **Information Retrieval**: A **RAG pipeline** searches the FAISS vector database for relevant hospital or insurance data.
+5. **Response Generation**: The LLM generates a structured, natural response.
+6. **Loop Back**: Accept another query or Exit.
+7. **Text-to-Speech**: The final response is optionally converted to audio output.
 
-*   `app.py`: Main application entry point, initializes the RAG retriever and starts the LangGraph conversational flow.
-*   `db/`: Contains database-related functionalities.
-    *   `db.py`: Sets up the SQLite database, defines `Hospital` and `InsurancePlan` models, populates data, creates the FAISS vector database, and orchestrates LLM fine-tuning data generation and training.
-    *   `models.py`: Defines Pydantic models for structured data, including LLM responses, RAG grounding, and the overall `HospitalFinderState`.
-    *   `modules/`: Sub-directory for database-related modules like data generation and fine-tuning.
-        *   `fine_tuner.py`: Implements the QLoRA fine-tuning process for a language model.
-        *   `hospital_generator.py`: (Not read, but inferred from `db.py`) Likely generates synthetic hospital data.
-        *   `insurance_generator.py`: (Not read, but inferred from `db.py`) Likely generates synthetic insurance plan data.
-        *   `vector_db_generator.py`: (Not read, but inferred from `db.py`) Likely handles the creation of the FAISS vector database.
-        *   `fine_tune_data_generator.py`: (Not read, but inferred from `db.py`) Likely generates data for LLM fine-tuning.
-*   `graphs/`: Contains the conversational graph logic.
-    *   `hospital_graph.py`: (Not read, but inferred from `app.py`) Likely defines the LangGraph state machine for the hospital finding process.
-    *   `graph_tools.py`: Defines Langchain `tool`s used within the conversational graph, such as `transcribe_audio_tool`, `recognize_query_tool`, `text_to_speech_tool`, `hospital_lookup_tool`, and `hospital_lookup_rag_tool`.
-*   `tools/`: Houses various utility tools.
-    *   `rag_retrieve.py`: Implements the `HospitalRAGRetriever` class for retrieving hospital information using FAISS and grounding responses with an LLM (optionally fine-tuned).
-    *   `transcribe.py`: (Not read, but inferred from `graph_tools.py`) Likely handles speech-to-text functionality.
-    *   `recognize.py`: (Not read, but inferred from `graph_tools.py`) Likely handles natural language recognition and extraction.
-    *   `text_to_speech.py`: (Not read, but inferred from `graph_tools.py`) Likely handles text-to-speech functionality.
-    *   `hospital_lookup.py`: (Not read, but inferred `graph_tools.py`) Likely contains the logic for direct hospital database lookup.
-*   `settings/`: Configuration files.
-    *   `config.py`: Centralized configuration for the application, including API keys, model names, hyperparameters, and file paths.
-    *   `prompts.py`: (Not read, but inferred from `rag_retrieve.py`) Likely contains LLM prompts used for various tasks.
-    *   `client.py`: (Not read, but inferred from `rag_retrieve.py`) Likely sets up the LLM client.
+## Main Configurables
+Key configurable parameters define the bot’s behavior and operating mode:
+
+| Parameter | Description | Example / Default |
+|-----------|-------------|-----------------|
+| `MODE` | Running mode — text chatbot or voice-enabled bot | `"chatbot"` (`"chatbot"` or `"voicebot"`) |
+| `TRANSCRIBER_OPENAI_MODEL` | Speech-to-Text model for audio input | `"whisper-1"` |
+| `TRANSCRIBER_LANGUAGE` | Language for transcription | `"en"` |
+| `USE_LLM_FOR_RECOGNITION` | If True, uses LLM for intent recognition instead of spaCy | `TRUE` |
+| `RECOGNIZER_MODEL` | LLM for detecting intent, entities, and query structure | `"google/gemini-2.0-flash-001"` |
+| `RECOGNIZER_TEMPERATURE` | Sampling temperature for recognition LLM | `0.1` |
+| `CLARIFIER_MODEL` | Model for clarifying follow-ups | `"google/gemini-2.0-flash-001"` |
+| `CLARIFIER_TEMPERATURE` | Temperature setting for clarification model | `0.1` |
+| `TEXT_TO_DIALOGUE` | Converts factual responses to natural dialogue before TTS | `FALSE` |
+| `TEXT_TO_DIALOGUE_MODEL` | Model for dialogue conversion | `"google/gemini-2.0-flash-001"` |
+| `TEXT_TO_DIALOGUE_TEMPERATURE` | Temperature for dialogue conversion | `0.1` |
+| `MAX_TURNS` | Maximum dialogue turns for a session | `10` |
+| `LOOKUP_MODE` | Mode of hospital lookup (`simple` or `rag`) | `"rag"` |
+| `RAG_GROUNDER_MODEL` | Model used for RAG grounding | `"google/gemini-2.0-flash-001"` |
+| `RAG_GROUNDER_TEMPERATURE` | Temperature for RAG grounding model | `0.1` |
+| `GROUND_WITH_FINE_TUNE` | If True and intent is "find by hospital," use fine-tuned QLoRA model | `TRUE` |
+
+---
 
 ## 🚀 Setup and Installation (using `uv`)
 
