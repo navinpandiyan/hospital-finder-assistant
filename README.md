@@ -1,4 +1,4 @@
-# Voice Hospital Finder Bot
+# Hospital Finder Bot
 
 This project implements a voice-enabled hospital finder bot. It leverages a combination of speech-to-text, natural language understanding, Retrieval Augmented Generation (RAG) with FAISS vector database, LLM fine-tuning, and text-to-speech to provide an interactive experience for users looking for hospitals.
 
